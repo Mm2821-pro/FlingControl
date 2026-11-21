@@ -1,111 +1,125 @@
--- FLING CONTROL V1.6
--- Safe UI Demo for your own Roblox experience
--- Place inside a LocalScript
+
+-- FLING CONTROL V1.7
+-- BLACK EDITION
+-- LocalScript for your own Roblox experience
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+local UIS = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local oldGui = playerGui:FindFirstChild("FlingControlV16")
-if oldGui then
-    oldGui:Destroy()
-end
+local old = playerGui:FindFirstChild("FlingControlV17")
+if old then old:Destroy() end
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "FlingControlV16"
+gui.Name = "FlingControlV17"
 gui.ResetOnSpawn = false
-gui.DisplayOrder = 100
+gui.DisplayOrder = 20
 gui.Parent = playerGui
+
+local black = Color3.fromRGB(0, 0, 0)
+local panel = Color3.fromRGB(13, 13, 13)
+local item = Color3.fromRGB(27, 27, 27)
+local blue = Color3.fromRGB(35, 105, 210)
+local white = Color3.fromRGB(245, 245, 245)
+local gray = Color3.fromRGB(155, 155, 155)
 
 local main = Instance.new("Frame")
 main.Name = "Main"
-main.Size = UDim2.fromScale(0.92, 0.72)
+main.Size = UDim2.fromScale(0.95, 0.85)
 main.Position = UDim2.fromScale(0.5, 0.5)
 main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.BackgroundColor3 = Color3.fromRGB(12, 17, 31)
+main.BackgroundColor3 = black
 main.BorderSizePixel = 0
 main.Parent = gui
 
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 14)
-mainCorner.Parent = main
+local stroke = Instance.new("UIStroke")
+stroke.Color = blue
+stroke.Thickness = 1.5
+stroke.Parent = main
 
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(35, 105, 220)
-mainStroke.Thickness = 1.5
-mainStroke.Parent = main
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 13)
+corner.Parent = main
 
 -- TOP BAR
 
 local top = Instance.new("Frame")
-top.Size = UDim2.new(1, 0, 0, 58)
-top.BackgroundColor3 = Color3.fromRGB(20, 34, 61)
+top.Size = UDim2.new(1, 0, 0, 65)
+top.BackgroundColor3 = panel
 top.BorderSizePixel = 0
 top.Parent = main
 
 local topCorner = Instance.new("UICorner")
-topCorner.CornerRadius = UDim.new(0, 14)
+topCorner.CornerRadius = UDim.new(0, 13)
 topCorner.Parent = top
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(0.65, 0, 0, 29)
-title.Position = UDim2.new(0, 13, 0, 5)
+title.Position = UDim2.new(0, 15, 0, 8)
+title.Size = UDim2.new(0.7, 0, 0, 27)
 title.BackgroundTransparency = 1
 title.Text = "FLING CONTROL"
-title.TextColor3 = Color3.fromRGB(100, 170, 255)
+title.TextColor3 = white
+title.TextSize = 20
 title.Font = Enum.Font.GothamBold
-title.TextSize = 17
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = top
 
-local subtitle = Instance.new("TextLabel")
-subtitle.Size = UDim2.new(0.65, 0, 0, 17)
-subtitle.Position = UDim2.new(0, 13, 0, 32)
-subtitle.BackgroundTransparency = 1
-subtitle.Text = "VERSION 1.6  •  UI DEMO"
-subtitle.TextColor3 = Color3.fromRGB(145, 155, 180)
-subtitle.Font = Enum.Font.Gotham
-subtitle.TextSize = 9
-subtitle.TextXAlignment = Enum.TextXAlignment.Left
-subtitle.Parent = top
+local version = Instance.new("TextLabel")
+version.Position = UDim2.new(0, 16, 0, 36)
+version.Size = UDim2.new(0.7, 0, 0, 17)
+version.BackgroundTransparency = 1
+version.Text = "VERSION 1.7  •  BLACK EDITION"
+version.TextColor3 = gray
+version.TextSize = 10
+version.Font = Enum.Font.Gotham
+version.TextXAlignment = Enum.TextXAlignment.Left
+version.Parent = top
 
-local function topButton(text, position)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromOffset(32, 32)
-    button.Position = position
-    button.BackgroundColor3 = Color3.fromRGB(35, 55, 90)
-    button.Text = text
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 16
-    button.BorderSizePixel = 0
-    button.Parent = top
+local function makeButton(parent, text, size, pos)
+    local b = Instance.new("TextButton")
+    b.Size = size
+    b.Position = pos
+    b.BackgroundColor3 = item
+    b.Text = text
+    b.TextColor3 = white
+    b.TextSize = 15
+    b.Font = Enum.Font.GothamBold
+    b.BorderSizePixel = 0
+    b.Parent = parent
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = button
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = b
 
-    return button
+    return b
 end
 
-local minimize = topButton("–", UDim2.new(1, -76, 0, 13))
-local close = topButton("X", UDim2.new(1, -39, 0, 13))
+local minimize = makeButton(
+    top, "−",
+    UDim2.fromOffset(38, 38),
+    UDim2.new(1, -88, 0, 13)
+)
+
+local close = makeButton(
+    top, "X",
+    UDim2.fromOffset(38, 38),
+    UDim2.new(1, -45, 0, 13)
+)
 
 -- BODY
 
 local body = Instance.new("Frame")
-body.Name = "Body"
-body.Position = UDim2.new(0, 0, 0, 65)
-body.Size = UDim2.new(1, 0, 1, -65)
+body.Position = UDim2.new(0, 0, 0, 72)
+body.Size = UDim2.new(1, 0, 1, -78)
 body.BackgroundTransparency = 1
 body.Parent = main
 
 local sidebar = Instance.new("Frame")
-sidebar.Position = UDim2.new(0, 9, 0, 5)
-sidebar.Size = UDim2.new(0, 98, 1, -10)
-sidebar.BackgroundColor3 = Color3.fromRGB(18, 27, 47)
+sidebar.Position = UDim2.new(0, 10, 0, 5)
+sidebar.Size = UDim2.new(0.23, -12, 1, -10)
+sidebar.BackgroundColor3 = panel
 sidebar.BorderSizePixel = 0
 sidebar.Parent = body
 
@@ -113,88 +127,53 @@ local sideCorner = Instance.new("UICorner")
 sideCorner.CornerRadius = UDim.new(0, 10)
 sideCorner.Parent = sidebar
 
-local sideLayout = Instance.new("UIListLayout")
-sideLayout.Padding = UDim.new(0, 8)
-sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
-sideLayout.Parent = sidebar
-
-local sidePadding = Instance.new("UIPadding")
-sidePadding.PaddingTop = UDim.new(0, 12)
-sidePadding.Parent = sidebar
-
 local content = Instance.new("Frame")
-content.Position = UDim2.new(0, 116, 0, 5)
-content.Size = UDim2.new(1, -125, 1, -10)
-content.BackgroundTransparency = 1
+content.Position = UDim2.new(0.23, 5, 0, 5)
+content.Size = UDim2.new(0.77, -15, 1, -10)
+content.BackgroundColor3 = panel
+content.BorderSizePixel = 0
 content.Parent = body
 
--- NOTIFICATION
+local contentCorner = Instance.new("UICorner")
+contentCorner.CornerRadius = UDim.new(0, 10)
+contentCorner.Parent = content
 
-local toast = Instance.new("TextLabel")
-toast.Size = UDim2.new(1, -20, 0, 30)
-toast.Position = UDim2.new(0, 10, 1, -38)
-toast.BackgroundColor3 = Color3.fromRGB(30, 65, 115)
-toast.TextColor3 = Color3.new(1, 1, 1)
-toast.Text = "FLING CONTROL V1.6"
-toast.Font = Enum.Font.Gotham
-toast.TextSize = 11
-toast.Visible = false
-toast.BorderSizePixel = 0
-toast.Parent = main
-
-local toastCorner = Instance.new("UICorner")
-toastCorner.CornerRadius = UDim.new(0, 7)
-toastCorner.Parent = toast
-
-local function showToast(message)
-    toast.Text = message
-    toast.Visible = true
-
-    task.delay(2, function()
-        if toast.Parent then
-            toast.Visible = false
-        end
-    end)
-end
-
--- PAGE CREATION
+-- PAGES
 
 local pages = {}
-local tabButtons = {}
-local allToggles = {}
+local tabs = {}
+local toggles = {}
 
 local function createPage(name)
     local page = Instance.new("ScrollingFrame")
     page.Name = name
     page.Size = UDim2.fromScale(1, 1)
-    page.BackgroundColor3 = Color3.fromRGB(18, 27, 47)
+    page.BackgroundTransparency = 1
     page.BorderSizePixel = 0
-    page.ScrollBarThickness = 3
-    page.ScrollBarImageColor3 = Color3.fromRGB(65, 135, 235)
-    page.Visible = false
+    page.ScrollBarThickness = 4
+    page.ScrollBarImageColor3 = blue
     page.CanvasSize = UDim2.new(0, 0, 0, 0)
+    page.Visible = false
     page.Parent = content
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = page
-
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 10)
+    padding.PaddingTop = UDim.new(0, 12)
+    padding.PaddingLeft = UDim.new(0, 12)
+    padding.PaddingRight = UDim.new(0, 12)
     padding.PaddingBottom = UDim.new(0, 12)
-    padding.PaddingLeft = UDim.new(0, 10)
-    padding.PaddingRight = UDim.new(0, 10)
     padding.Parent = page
 
     local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 8)
+    layout.Padding = UDim.new(0, 9)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Parent = page
 
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    layout:GetPropertyChangedSignal(
+        "AbsoluteContentSize"
+    ):Connect(function()
         page.CanvasSize = UDim2.new(
-            0, 0, 0, layout.AbsoluteContentSize.Y + 25
+            0, 0, 0,
+            layout.AbsoluteContentSize.Y + 30
         )
     end)
 
@@ -202,280 +181,211 @@ local function createPage(name)
     return page
 end
 
-local function heading(parent, text, description)
+local function heading(page, name, description)
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 54)
+    label.Size = UDim2.new(1, 0, 0, 55)
     label.BackgroundTransparency = 1
-    label.Text = text .. "\n" .. description
-    label.TextColor3 = Color3.fromRGB(225, 235, 255)
+    label.Text = name .. "\n" .. description
+    label.TextColor3 = white
+    label.TextSize = 15
     label.Font = Enum.Font.GothamBold
-    label.TextSize = 13
     label.TextWrapped = true
     label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = parent
+    label.Parent = page
 end
 
--- TOGGLE CREATION
-
-local function addToggle(parent, name, description)
+local function addToggle(page, name, description)
     local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, 0, 0, 61)
-    row.BackgroundColor3 = Color3.fromRGB(27, 41, 68)
+    row.Size = UDim2.new(1, 0, 0, 62)
+    row.BackgroundColor3 = item
     row.BorderSizePixel = 0
-    row.Parent = parent
+    row.Parent = page
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = row
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = row
 
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Position = UDim2.new(0, 9, 0, 7)
-    nameLabel.Size = UDim2.new(1, -83, 0, 20)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = name
-    nameLabel.TextColor3 = Color3.fromRGB(230, 238, 255)
-    nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextSize = 11
-    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    nameLabel.Parent = row
+    local label = Instance.new("TextLabel")
+    label.Position = UDim2.new(0, 10, 0, 7)
+    label.Size = UDim2.new(1, -90, 0, 22)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = white
+    label.TextSize = 12
+    label.Font = Enum.Font.GothamBold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = row
 
     local desc = Instance.new("TextLabel")
-    desc.Position = UDim2.new(0, 9, 0, 29)
-    desc.Size = UDim2.new(1, -83, 0, 24)
+    desc.Position = UDim2.new(0, 10, 0, 31)
+    desc.Size = UDim2.new(1, -90, 0, 22)
     desc.BackgroundTransparency = 1
     desc.Text = description
-    desc.TextColor3 = Color3.fromRGB(145, 160, 185)
+    desc.TextColor3 = gray
+    desc.TextSize = 9
     desc.Font = Enum.Font.Gotham
-    desc.TextSize = 8
-    desc.TextWrapped = true
     desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.TextWrapped = true
     desc.Parent = row
 
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromOffset(59, 27)
-    button.Position = UDim2.new(1, -67, 0.5, -13)
-    button.BackgroundColor3 = Color3.fromRGB(65, 72, 90)
-    button.Text = "OFF"
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 10
-    button.BorderSizePixel = 0
-    button.Parent = row
-
-    local buttonCorner = Instance.new("UICorner")
-    buttonCorner.CornerRadius = UDim.new(0, 7)
-    buttonCorner.Parent = button
+    local button = makeButton(
+        row, "OFF",
+        UDim2.fromOffset(60, 30),
+        UDim2.new(1, -70, 0.5, -15)
+    )
 
     local enabled = false
 
-    local function setEnabled(value, silent)
+    local function setEnabled(value)
         enabled = value
         button.Text = enabled and "ON" or "OFF"
-        button.BackgroundColor3 = enabled
-            and Color3.fromRGB(30, 135, 100)
-            or Color3.fromRGB(65, 72, 90)
-
-        if not silent then
-            showToast(name .. ": " .. (enabled and "ON" or "OFF"))
-        end
+        button.BackgroundColor3 =
+            enabled and blue or Color3.fromRGB(45, 45, 45)
     end
 
     button.Activated:Connect(function()
         setEnabled(not enabled)
     end)
 
-    table.insert(allToggles, setEnabled)
-    return setEnabled
+    table.insert(toggles, setEnabled)
 end
 
--- FLING PAGE
+-- FLING
 
-local flingPage = createPage("FLING")
-
-heading(
-    flingPage,
-    "FLING CONTROL",
-    "Настройки силы — демонстрационный режим"
-)
+local fling = createPage("FLING")
+heading(fling, "FLING", "Демонстрационные настройки")
 
 local strength = 100
 
 local strengthRow = Instance.new("Frame")
-strengthRow.Size = UDim2.new(1, 0, 0, 65)
-strengthRow.BackgroundColor3 = Color3.fromRGB(27, 41, 68)
+strengthRow.Size = UDim2.new(1, 0, 0, 60)
+strengthRow.BackgroundColor3 = item
 strengthRow.BorderSizePixel = 0
-strengthRow.Parent = flingPage
+strengthRow.Parent = fling
 
-local strengthCorner = Instance.new("UICorner")
-strengthCorner.CornerRadius = UDim.new(0, 8)
-strengthCorner.Parent = strengthRow
+local strengthText = Instance.new("TextLabel")
+strengthText.Size = UDim2.new(0.4, 0, 1, 0)
+strengthText.Position = UDim2.new(0, 10, 0, 0)
+strengthText.BackgroundTransparency = 1
+strengthText.Text = "STRENGTH"
+strengthText.TextColor3 = white
+strengthText.Font = Enum.Font.GothamBold
+strengthText.TextSize = 12
+strengthText.Parent = strengthRow
 
-local strengthLabel = Instance.new("TextLabel")
-strengthLabel.Size = UDim2.new(0.35, 0, 1, 0)
-strengthLabel.Position = UDim2.new(0, 9, 0, 0)
-strengthLabel.BackgroundTransparency = 1
-strengthLabel.Text = "STRENGTH"
-strengthLabel.TextColor3 = Color3.fromRGB(220, 235, 255)
-strengthLabel.Font = Enum.Font.GothamBold
-strengthLabel.TextSize = 10
-strengthLabel.Parent = strengthRow
+local value = Instance.new("TextLabel")
+value.Size = UDim2.new(0, 65, 1, 0)
+value.Position = UDim2.new(1, -130, 0, 0)
+value.BackgroundTransparency = 1
+value.TextColor3 = white
+value.Text = tostring(strength)
+value.Font = Enum.Font.GothamBold
+value.TextSize = 15
+value.Parent = strengthRow
 
-local strengthValue = Instance.new("TextLabel")
-strengthValue.Size = UDim2.new(0, 55, 1, 0)
-strengthValue.Position = UDim2.new(1, -125, 0, 0)
-strengthValue.BackgroundTransparency = 1
-strengthValue.TextColor3 = Color3.fromRGB(100, 175, 255)
-strengthValue.Font = Enum.Font.GothamBold
-strengthValue.TextSize = 14
-strengthValue.Parent = strengthRow
-
-local function updateStrength()
-    strengthValue.Text = tostring(strength)
-end
-
-local function strengthButton(text, x, change)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromOffset(27, 29)
-    button.Position = UDim2.new(1, x, 0.5, -14)
-    button.BackgroundColor3 = Color3.fromRGB(40, 90, 155)
-    button.Text = text
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 15
-    button.BorderSizePixel = 0
-    button.Parent = strengthRow
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = button
-
-    button.Activated:Connect(function()
-        strength = math.clamp(strength + change, 100, 10000)
-        updateStrength()
-    end)
-end
-
-strengthButton("-", -64, -100)
-strengthButton("+", -32, 100)
-updateStrength()
-
-heading(
-    flingPage,
-    "INFORMATION",
-    "Этот интерфейс не воздействует на других игроков."
+local minus = makeButton(
+    strengthRow, "−",
+    UDim2.fromOffset(28, 30),
+    UDim2.new(1, -62, 0.5, -15)
 )
 
--- ANTI PAGE
-
-local antiPage = createPage("ANTI")
-
-heading(antiPage, "ANTI SYSTEM", "Демонстрационные переключатели")
-
-addToggle(antiPage, "Anti Grab", "Только отображение состояния")
-addToggle(antiPage, "Anti Ragdoll", "Только отображение состояния")
-addToggle(antiPage, "Anti Snowball", "Только отображение состояния")
-addToggle(antiPage, "Anti Explosion", "Только отображение состояния")
-addToggle(antiPage, "Anti Paint", "Только отображение состояния")
-addToggle(antiPage, "Anti Fire", "Не отключает игровой урон")
-addToggle(
-    antiPage,
-    "Anti Kick",
-    "Декоративный режим — не отменяет кик сервера"
+local plus = makeButton(
+    strengthRow, "+",
+    UDim2.fromOffset(28, 30),
+    UDim2.new(1, -31, 0.5, -15)
 )
 
--- FUN PAGE
-
-local funPage = createPage("FUN")
-
-heading(funPage, "FUN FEATURES", "Визуальные функции — DEMO")
-
-addToggle(
-    funPage,
-    "Wings",
-    "Превью крыльев из 8 паллет"
-)
-
-addToggle(
-    funPage,
-    "Dynamic Wings",
-    "Превью изменения движения крыльев"
-)
-
-addToggle(
-    funPage,
-    "Extra Wings",
-    "Переключатель дополнительного эффекта"
-)
-
-addToggle(
-    funPage,
-    "Mech Suit",
-    "Превью режима механического клона"
-)
-
--- SETTINGS PAGE
-
-local settingsPage = createPage("SETTINGS")
-
-heading(settingsPage, "SETTINGS", "Настройки интерфейса")
-
-addToggle(
-    settingsPage,
-    "Show Notifications",
-    "Демо уведомления при нажатии"
-)
-
-local resetButton = Instance.new("TextButton")
-resetButton.Size = UDim2.new(1, 0, 0, 45)
-resetButton.BackgroundColor3 = Color3.fromRGB(135, 55, 65)
-resetButton.Text = "RESET ALL"
-resetButton.TextColor3 = Color3.new(1, 1, 1)
-resetButton.Font = Enum.Font.GothamBold
-resetButton.TextSize = 12
-resetButton.BorderSizePixel = 0
-resetButton.Parent = settingsPage
-
-local resetCorner = Instance.new("UICorner")
-resetCorner.CornerRadius = UDim.new(0, 8)
-resetCorner.Parent = resetButton
-
-resetButton.Activated:Connect(function()
-    for _, setToggle in ipairs(allToggles) do
-        setToggle(false, true)
-    end
-
-    strength = 100
-    updateStrength()
-    showToast("Settings reset!")
+minus.Activated:Connect(function()
+    strength = math.max(100, strength - 100)
+    value.Text = tostring(strength)
 end)
 
--- TAB SYSTEM
+plus.Activated:Connect(function()
+    strength = math.min(10000, strength + 100)
+    value.Text = tostring(strength)
+end)
+
+-- ANTI
+
+local anti = createPage("ANTI")
+heading(anti, "ANTI", "Демо-переключатели")
+
+addToggle(anti, "Anti Grab", "Демонстрационный режим")
+addToggle(anti, "Anti Ragdoll", "Демонстрационный режим")
+addToggle(anti, "Anti Snowball", "Демонстрационный режим")
+addToggle(anti, "Anti Explosion", "Демонстрационный режим")
+addToggle(anti, "Anti Paint", "Демонстрационный режим")
+addToggle(anti, "Anti Fire", "Не отключает игровой урон")
+addToggle(anti, "Anti Kick", "Не отменяет кик сервера")
+
+-- FUN
+
+local fun = createPage("FUN")
+heading(fun, "FUN", "Визуальные функции DEMO")
+
+addToggle(fun, "Wings", "Превью крыльев")
+addToggle(fun, "Dynamic Wings", "Превью динамической анимации")
+addToggle(fun, "Extra Wings", "Дополнительный визуальный эффект")
+addToggle(fun, "Mech Suit", "Превью механического костюма")
+
+-- SETTINGS
+
+local settings = createPage("SETTINGS")
+heading(settings, "SETTINGS", "Настройки интерфейса")
+
+local notifications = true
+
+local notifyToggle = addToggle(
+    settings,
+    "Show Notifications",
+    "Включить или выключить уведомления"
+)
+
+local reset = makeButton(
+    settings, "RESET ALL",
+    UDim2.new(1, 0, 0, 42),
+    UDim2.new(0, 0, 0, 0)
+)
+reset.BackgroundColor3 = Color3.fromRGB(55, 35, 35)
+
+reset.Activated:Connect(function()
+    for _, setToggle in ipairs(toggles) do
+        setToggle(false)
+    end
+    strength = 100
+    value.Text = "100"
+end)
+
+-- TABS
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.Padding = UDim.new(0, 9)
+tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Parent = sidebar
+
+local tabPadding = Instance.new("UIPadding")
+tabPadding.PaddingTop = UDim.new(0, 12)
+tabPadding.PaddingLeft = UDim.new(0, 6)
+tabPadding.PaddingRight = UDim.new(0, 6)
+tabPadding.Parent = sidebar
 
 local function createTab(name, order)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -12, 0, 39)
+    local button = makeButton(
+        sidebar,
+        name,
+        UDim2.new(1, 0, 0, 43),
+        UDim2.new()
+    )
     button.LayoutOrder = order
-    button.BackgroundColor3 = Color3.fromRGB(27, 42, 68)
-    button.Text = name
-    button.TextColor3 = Color3.fromRGB(190, 210, 240)
-    button.Font = Enum.Font.GothamBold
     button.TextSize = 10
-    button.BorderSizePixel = 0
-    button.Parent = sidebar
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 7)
-    corner.Parent = button
-
-    tabButtons[name] = button
+    tabs[name] = button
 
     button.Activated:Connect(function()
         for pageName, page in pairs(pages) do
             page.Visible = pageName == name
-            tabButtons[pageName].BackgroundColor3 =
-                pageName == name
-                and Color3.fromRGB(35, 105, 190)
-                or Color3.fromRGB(27, 42, 68)
+            tabs[pageName].BackgroundColor3 =
+                pageName == name and blue or item
         end
     end)
 end
@@ -486,38 +396,34 @@ createTab("FUN", 3)
 createTab("SETTINGS", 4)
 
 pages.FLING.Visible = true
-tabButtons.FLING.BackgroundColor3 = Color3.fromRGB(35, 105, 190)
+tabs.FLING.BackgroundColor3 = blue
 
 -- MINIMIZE / CLOSE
 
 local minimized = false
-local expandedSize = UDim2.fromScale(0.92, 0.72)
+local normalSize = UDim2.fromScale(0.95, 0.85)
 
 minimize.Activated:Connect(function()
     minimized = not minimized
     body.Visible = not minimized
-
     main.Size = minimized
-        and UDim2.fromScale(0.92, 0.10)
-        or expandedSize
-
-    minimize.Text = minimized and "+" or "–"
+        and UDim2.fromScale(0.95, 0.12)
+        or normalSize
 end)
 
 close.Activated:Connect(function()
     gui:Destroy()
 end)
 
--- DRAG SUPPORT: TOUCH + MOUSE
+-- DRAG
 
 local dragging = false
-local dragInput
 local dragStart
 local startPosition
 
 top.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.Touch
+        or input.UserInputType == Enum.UserInputType.MouseButton1 then
 
         dragging = true
         dragStart = input.Position
@@ -531,17 +437,12 @@ top.InputBegan:Connect(function(input)
     end
 end)
 
-top.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
+UIS.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.Touch
+        or input.UserInputType == Enum.UserInputType.MouseMovement
+    ) then
         local delta = input.Position - dragStart
-
         main.Position = UDim2.new(
             startPosition.X.Scale,
             startPosition.X.Offset + delta.X,
@@ -550,5 +451,3 @@ UserInputService.InputChanged:Connect(function(input)
         )
     end
 end)
-
-showToast("FLING CONTROL V1.6 loaded!")
