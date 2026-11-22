@@ -1,10 +1,9 @@
 
---[[
-    FlingControl V2.0
-    GLOBAL UPDATE | BLACK EDITION
-    GUI ONLY
-    Designed for Roblox LocalScript
-]]
+--==================================================
+-- FLING CONTROL V2.1
+-- GLOBAL UPDATE | BLACK EDITION
+-- GUI ONLY | ENGLISH + RUSSIAN
+--==================================================
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -13,38 +12,125 @@ local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- SETTINGS
+--==================================================
+-- CONFIGURATION
+--==================================================
 
 local Config = {
-    Background = Color3.fromRGB(12, 12, 14),
-    Panel = Color3.fromRGB(19, 19, 22),
-    Element = Color3.fromRGB(29, 29, 34),
-    Accent = Color3.fromRGB(45, 115, 190),
-    Text = Color3.fromRGB(240, 240, 245),
+    Background = Color3.fromRGB(10, 10, 12),
+    Panel = Color3.fromRGB(18, 18, 22),
+    Card = Color3.fromRGB(27, 27, 33),
+    CardHover = Color3.fromRGB(36, 36, 44),
+    Accent = Color3.fromRGB(55, 125, 210),
+    AccentDark = Color3.fromRGB(35, 85, 150),
+    Text = Color3.fromRGB(245, 245, 250),
     Muted = Color3.fromRGB(145, 145, 155),
-    Enabled = Color3.fromRGB(40, 145, 90)
+    Green = Color3.fromRGB(45, 165, 105),
+    Red = Color3.fromRGB(190, 65, 65)
 }
 
 local State = {
+    Language = "EN",
     CurrentTab = "FLING",
     Minimized = false,
+    Strength = 100,
     Toggles = {},
-    Strength = 100
+    Search = ""
 }
 
--- CLEANUP
+--==================================================
+-- TRANSLATIONS
+--==================================================
 
-local Old = PlayerGui:FindFirstChild("FlingControlV2")
+local Languages = {
+    EN = {
+        FLING = "FLING",
+        ANTI = "ANTI",
+        FUN = "FUN",
+        SETTINGS = "SETTINGS",
+        Search = "Search functions...",
+        Strength = "Strength",
+        SuperStrength = "Super Strength",
+        FlingSettings = "Fling Settings",
+        AntiGrab = "Anti Grab",
+        AntiRagdoll = "Anti Ragdoll",
+        AntiSnowball = "Anti Snowball",
+        AntiExplosion = "Anti Explosion",
+        AntiPaint = "Anti Paint",
+        AntiFire = "Anti Fire",
+        AntiKick = "Anti Kick",
+        Wings = "Wings",
+        DynamicWings = "Dynamic Wings",
+        ExtraWings = "Extra Wings",
+        MechSuit = "Mech Suit",
+        DarkMode = "Dark Mode",
+        Notifications = "Show Notifications",
+        Language = "Language",
+        InterfaceScale = "Interface Scale",
+        ResetSettings = "Reset Settings",
+        Enabled = "Enabled",
+        Disabled = "Disabled",
+        Maximum = "Maximum: 2000",
+        SelectLanguage = "Select Language",
+        Demo = "Demonstration setting",
+        Version = "GLOBAL UPDATE"
+    },
+
+    RU = {
+        FLING = "ФЛИНГ",
+        ANTI = "АНТИ",
+        FUN = "РАЗВЛЕЧЕНИЯ",
+        SETTINGS = "НАСТРОЙКИ",
+        Search = "Поиск функций...",
+        Strength = "Сила",
+        SuperStrength = "Супер сила",
+        FlingSettings = "Настройки флинга",
+        AntiGrab = "Анти захват",
+        AntiRagdoll = "Анти рэгдолл",
+        AntiSnowball = "Анти снежок",
+        AntiExplosion = "Анти взрыв",
+        AntiPaint = "Анти краска",
+        AntiFire = "Анти огонь",
+        AntiKick = "Анти кик",
+        Wings = "Крылья",
+        DynamicWings = "Динамические крылья",
+        ExtraWings = "Дополнительные крылья",
+        MechSuit = "Меха костюм",
+        DarkMode = "Тёмная тема",
+        Notifications = "Уведомления",
+        Language = "Язык",
+        InterfaceScale = "Размер интерфейса",
+        ResetSettings = "Сброс настроек",
+        Enabled = "Включено",
+        Disabled = "Выключено",
+        Maximum = "Максимум: 2000",
+        SelectLanguage = "Выбрать язык",
+        Demo = "Демонстрационная настройка",
+        Version = "ГЛОБАЛЬНОЕ ОБНОВЛЕНИЕ"
+    }
+}
+
+local function T(key)
+    return Languages[State.Language][key] or key
+end
+
+--==================================================
+-- CLEANUP
+--==================================================
+
+local Old = PlayerGui:FindFirstChild("FlingControlV21")
 if Old then
     Old:Destroy()
 end
 
--- HELPERS
+--==================================================
+-- UI HELPERS
+--==================================================
 
-local function Create(class, properties, parent)
+local function Create(class, props, parent)
     local object = Instance.new(class)
 
-    for property, value in pairs(properties) do
+    for property, value in pairs(props) do
         object[property] = value
     end
 
@@ -52,110 +138,137 @@ local function Create(class, properties, parent)
     return object
 end
 
-local function Corner(parent, radius)
-    return Create("UICorner", {
+local function Round(object, radius)
+    Create("UICorner", {
         CornerRadius = UDim.new(0, radius or 8)
-    }, parent)
+    }, object)
 end
 
-local function Stroke(parent, color)
-    return Create("UIStroke", {
-        Color = color or Color3.fromRGB(48, 48, 55),
-        Thickness = 1
-    }, parent)
+local function Outline(object, color)
+    Create("UIStroke", {
+        Color = color or Color3.fromRGB(48, 48, 58),
+        Thickness = 1,
+        Transparency = 0.15
+    }, object)
 end
 
-local function Animate(object, properties)
-    TweenService:Create(
+local function Tween(object, properties, duration)
+    local animation = TweenService:Create(
         object,
-        TweenInfo.new(0.18, Enum.EasingStyle.Quad),
+        TweenInfo.new(
+            duration or 0.2,
+            Enum.EasingStyle.Quart,
+            Enum.EasingDirection.Out
+        ),
         properties
-    ):Play()
+    )
+    animation:Play()
+    return animation
 end
 
--- SCREEN GUI
+--==================================================
+-- SCREEN
+--==================================================
 
 local Screen = Create("ScreenGui", {
-    Name = "FlingControlV2",
+    Name = "FlingControlV21",
     ResetOnSpawn = false,
     ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 }, PlayerGui)
 
+--==================================================
 -- MAIN WINDOW
+--==================================================
 
 local Main = Create("Frame", {
     Name = "Main",
-    Size = UDim2.fromOffset(650, 430),
-    Position = UDim2.new(0.5, -325, 0.5, -215),
+    Size = UDim2.fromOffset(680, 460),
+    Position = UDim2.new(0.5, -340, 0.5, -230),
     BackgroundColor3 = Config.Background,
-    BorderSizePixel = 0
+    BorderSizePixel = 0,
+    ClipsDescendants = true
 }, Screen)
 
-Corner(Main, 12)
-Stroke(Main, Color3.fromRGB(55, 55, 65))
+Round(Main, 12)
+Outline(Main, Color3.fromRGB(55, 55, 70))
 
+--==================================================
 -- TOP BAR
+--==================================================
 
 local Top = Create("Frame", {
-    Size = UDim2.new(1, 0, 0, 48),
+    Size = UDim2.new(1, 0, 0, 50),
     BackgroundColor3 = Config.Panel,
     BorderSizePixel = 0
 }, Main)
 
-Corner(Top, 12)
-
-local Title = Create("TextLabel", {
-    Position = UDim2.fromOffset(17, 0),
-    Size = UDim2.new(1, -120, 1, 0),
+local TopTitle = Create("TextLabel", {
+    Position = UDim2.fromOffset(16, 3),
+    Size = UDim2.new(1, -130, 0, 27),
     BackgroundTransparency = 1,
-    Text = "FLING CONTROL  |  V2.0",
+    Text = "FLING CONTROL",
     TextColor3 = Config.Text,
     Font = Enum.Font.GothamBold,
-    TextSize = 15,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, Top)
+
+local VersionLabel = Create("TextLabel", {
+    Position = UDim2.fromOffset(17, 27),
+    Size = UDim2.new(1, -130, 0, 16),
+    BackgroundTransparency = 1,
+    Text = "V2.1 | GLOBAL UPDATE",
+    TextColor3 = Config.Accent,
+    Font = Enum.Font.GothamMedium,
+    TextSize = 9,
     TextXAlignment = Enum.TextXAlignment.Left
 }, Top)
 
 local Minimize = Create("TextButton", {
-    Position = UDim2.new(1, -76, 0, 9),
-    Size = UDim2.fromOffset(28, 28),
+    Position = UDim2.new(1, -78, 0, 10),
+    Size = UDim2.fromOffset(29, 29),
     Text = "—",
+    BackgroundColor3 = Config.Card,
     TextColor3 = Config.Text,
-    BackgroundColor3 = Config.Element,
     Font = Enum.Font.GothamBold,
-    TextSize = 16
+    TextSize = 16,
+    AutoButtonColor = false
 }, Top)
 
-Corner(Minimize, 7)
+Round(Minimize, 7)
 
 local Close = Create("TextButton", {
-    Position = UDim2.new(1, -39, 0, 9),
-    Size = UDim2.fromOffset(28, 28),
+    Position = UDim2.new(1, -41, 0, 10),
+    Size = UDim2.fromOffset(29, 29),
     Text = "×",
-    TextColor3 = Color3.fromRGB(255, 110, 110),
-    BackgroundColor3 = Config.Element,
+    BackgroundColor3 = Color3.fromRGB(65, 30, 34),
+    TextColor3 = Color3.fromRGB(255, 120, 120),
     Font = Enum.Font.GothamBold,
-    TextSize = 19
+    TextSize = 19,
+    AutoButtonColor = false
 }, Top)
 
-Corner(Close, 7)
+Round(Close, 7)
 
+--==================================================
 -- SIDEBAR
+--==================================================
 
 local Sidebar = Create("Frame", {
-    Position = UDim2.fromOffset(10, 58),
-    Size = UDim2.new(0, 155, 1, -68),
+    Position = UDim2.fromOffset(10, 60),
+    Size = UDim2.new(0, 165, 1, -70),
     BackgroundColor3 = Config.Panel,
     BorderSizePixel = 0
 }, Main)
 
-Corner(Sidebar, 9)
+Round(Sidebar, 9)
 
 local Search = Create("TextBox", {
     Position = UDim2.fromOffset(9, 10),
-    Size = UDim2.new(1, -18, 0, 34),
-    BackgroundColor3 = Config.Element,
+    Size = UDim2.new(1, -18, 0, 36),
+    BackgroundColor3 = Config.Card,
     Text = "",
-    PlaceholderText = "Search functions...",
+    PlaceholderText = T("Search"),
     PlaceholderColor3 = Config.Muted,
     TextColor3 = Config.Text,
     Font = Enum.Font.Gotham,
@@ -163,32 +276,35 @@ local Search = Create("TextBox", {
     ClearTextOnFocus = false
 }, Sidebar)
 
-Corner(Search, 7)
+Round(Search, 7)
 
 local TabList = Create("Frame", {
-    Position = UDim2.fromOffset(8, 54),
-    Size = UDim2.new(1, -16, 1, -62),
+    Position = UDim2.fromOffset(9, 56),
+    Size = UDim2.new(1, -18, 1, -65),
     BackgroundTransparency = 1
 }, Sidebar)
 
 Create("UIListLayout", {
-    Padding = UDim.new(0, 7),
+    Padding = UDim.new(0, 8),
     SortOrder = Enum.SortOrder.LayoutOrder
 }, TabList)
 
--- CONTENT
+--==================================================
+-- CONTENT PANEL
+--==================================================
 
 local Content = Create("Frame", {
-    Position = UDim2.fromOffset(175, 58),
-    Size = UDim2.new(1, -185, 1, -68),
+    Position = UDim2.fromOffset(185, 60),
+    Size = UDim2.new(1, -195, 1, -70),
     BackgroundColor3 = Config.Panel,
-    BorderSizePixel = 0
+    BorderSizePixel = 0,
+    ClipsDescendants = true
 }, Main)
 
-Corner(Content, 9)
+Round(Content, 9)
 
 local PageTitle = Create("TextLabel", {
-    Position = UDim2.fromOffset(15, 9),
+    Position = UDim2.fromOffset(15, 8),
     Size = UDim2.new(1, -30, 0, 35),
     BackgroundTransparency = 1,
     Text = "FLING",
@@ -199,76 +315,92 @@ local PageTitle = Create("TextLabel", {
 }, Content)
 
 local Page = Create("ScrollingFrame", {
-    Position = UDim2.fromOffset(10, 48),
-    Size = UDim2.new(1, -20, 1, -58),
+    Position = UDim2.fromOffset(10, 47),
+    Size = UDim2.new(1, -20, 1, -57),
     BackgroundTransparency = 1,
     BorderSizePixel = 0,
-    ScrollBarThickness = 3,
+    ScrollBarThickness = 5,
     ScrollBarImageColor3 = Config.Accent,
-    CanvasSize = UDim2.new()
+    ScrollBarImageTransparency = 0.1,
+    ScrollingDirection = Enum.ScrollingDirection.Y,
+    ScrollingEnabled = true,
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    CanvasSize = UDim2.new(0, 0, 0, 0),
+    ElasticBehavior = Enum.ElasticBehavior.WhenScrollable,
+    VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
 }, Content)
 
 local PageLayout = Create("UIListLayout", {
-    Padding = UDim.new(0, 8),
+    Padding = UDim.new(0, 9),
     SortOrder = Enum.SortOrder.LayoutOrder
 }, Page)
 
-PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    Page.CanvasSize = UDim2.new(
-        0, 0, 0, PageLayout.AbsoluteContentSize.Y + 12
-    )
-end)
+Create("UIPadding", {
+    PaddingBottom = UDim.new(0, 15),
+    PaddingTop = UDim.new(0, 3),
+    PaddingLeft = UDim.new(0, 2),
+    PaddingRight = UDim.new(0, 5)
+}, Page)
 
--- PAGE DATA
+--==================================================
+-- FUNCTION LIST
+--==================================================
 
 local Functions = {
     FLING = {
         "Strength",
-        "Super Strength",
-        "Fling Settings"
+        "SuperStrength",
+        "FlingSettings"
     },
 
     ANTI = {
-        "Anti Grab",
-        "Anti Ragdoll",
-        "Anti Snowball",
-        "Anti Explosion",
-        "Anti Paint",
-        "Anti Fire",
-        "Anti Kick"
+        "AntiGrab",
+        "AntiRagdoll",
+        "AntiSnowball",
+        "AntiExplosion",
+        "AntiPaint",
+        "AntiFire",
+        "AntiKick"
     },
 
     FUN = {
         "Wings",
-        "Dynamic Wings",
-        "Extra Wings",
-        "Mech Suit"
+        "DynamicWings",
+        "ExtraWings",
+        "MechSuit"
     },
 
     SETTINGS = {
-        "Dark Mode",
-        "Show Notifications",
-        "Interface Scale",
-        "Reset Settings"
+        "DarkMode",
+        "Notifications",
+        "Language",
+        "InterfaceScale",
+        "ResetSettings"
     }
 }
 
--- FUNCTION CARDS
+local Tabs = {}
+local RefreshPage
 
-local function CreateCard(name)
+--==================================================
+-- CARD CREATION
+--==================================================
+
+local function CreateCard(name, key)
     local Card = Create("Frame", {
-        Size = UDim2.new(1, -5, 0, 65),
-        BackgroundColor3 = Config.Element,
+        Size = UDim2.new(1, -4, 0, 66),
+        BackgroundColor3 = Config.Card,
         BorderSizePixel = 0
     }, Page)
 
-    Corner(Card, 8)
+    Round(Card, 8)
+    Outline(Card)
 
     local Label = Create("TextLabel", {
-        Position = UDim2.fromOffset(12, 5),
-        Size = UDim2.new(1, -90, 0, 27),
+        Position = UDim2.fromOffset(13, 6),
+        Size = UDim2.new(1, -110, 0, 27),
         BackgroundTransparency = 1,
-        Text = name,
+        Text = T(key),
         TextColor3 = Config.Text,
         Font = Enum.Font.GothamSemibold,
         TextSize = 12,
@@ -276,65 +408,79 @@ local function CreateCard(name)
     }, Card)
 
     local Description = Create("TextLabel", {
-        Position = UDim2.fromOffset(12, 31),
-        Size = UDim2.new(1, -90, 0, 20),
+        Position = UDim2.fromOffset(13, 32),
+        Size = UDim2.new(1, -110, 0, 20),
         BackgroundTransparency = 1,
-        Text = "Demonstration setting",
+        Text = T("Demo"),
         TextColor3 = Config.Muted,
         Font = Enum.Font.Gotham,
         TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left
     }, Card)
 
-    local Toggle = Create("TextButton", {
-        Position = UDim2.new(1, -67, 0.5, -13),
-        Size = UDim2.fromOffset(55, 26),
-        BackgroundColor3 = Color3.fromRGB(55, 55, 60),
-        Text = "OFF",
+    local Button = Create("TextButton", {
+        Position = UDim2.new(1, -79, 0.5, -13),
+        Size = UDim2.fromOffset(65, 27),
+        BackgroundColor3 = Color3.fromRGB(52, 52, 60),
+        Text = State.Toggles[name] and "ON" or "OFF",
         TextColor3 = Config.Text,
         Font = Enum.Font.GothamBold,
-        TextSize = 10
+        TextSize = 10,
+        AutoButtonColor = false
     }, Card)
 
-    Corner(Toggle, 7)
+    Round(Button, 7)
 
-    State.Toggles[name] = false
+    Button.BackgroundColor3 =
+        State.Toggles[name] and Config.Green
+        or Color3.fromRGB(52, 52, 60)
 
-    Toggle.Activated:Connect(function()
+    Button.Activated:Connect(function()
         State.Toggles[name] = not State.Toggles[name]
 
-        if State.Toggles[name] then
-            Toggle.Text = "ON"
-            Animate(Toggle, {
-                BackgroundColor3 = Config.Enabled
-            })
-        else
-            Toggle.Text = "OFF"
-            Animate(Toggle, {
-                BackgroundColor3 = Color3.fromRGB(55, 55, 60)
-            })
-        end
+        Button.Text = State.Toggles[name] and "ON" or "OFF"
+
+        Tween(Button, {
+            BackgroundColor3 =
+                State.Toggles[name] and Config.Green
+                or Color3.fromRGB(52, 52, 60)
+        })
+    end)
+
+    Card.MouseEnter:Connect(function()
+        Tween(Card, {
+            BackgroundColor3 = Config.CardHover
+        })
+    end)
+
+    Card.MouseLeave:Connect(function()
+        Tween(Card, {
+            BackgroundColor3 = Config.Card
+        })
     end)
 
     return Card
 end
 
--- STRENGTH CARD
+--==================================================
+-- STRENGTH SLIDER
+--==================================================
 
 local function CreateStrength()
     local Card = Create("Frame", {
-        Size = UDim2.new(1, -5, 0, 92),
-        BackgroundColor3 = Config.Element,
+        Size = UDim2.new(1, -4, 0, 105),
+        BackgroundColor3 = Config.Card,
         BorderSizePixel = 0
     }, Page)
 
-    Corner(Card, 8)
+    Round(Card, 8)
+    Outline(Card)
 
     Create("TextLabel", {
-        Position = UDim2.fromOffset(12, 7),
-        Size = UDim2.new(1, -24, 0, 25),
+        Position = UDim2.fromOffset(13, 7),
+        Size = UDim2.new(0.7, 0, 0, 25),
         BackgroundTransparency = 1,
-        Text = "Strength",
+        Text = T("Strength"),
         TextColor3 = Config.Text,
         Font = Enum.Font.GothamBold,
         TextSize = 12,
@@ -342,183 +488,246 @@ local function CreateStrength()
     }, Card)
 
     local Value = Create("TextLabel", {
-        Position = UDim2.new(1, -65, 0, 7),
-        Size = UDim2.fromOffset(50, 25),
+        Position = UDim2.new(1, -100, 0, 7),
+        Size = UDim2.fromOffset(85, 25),
         BackgroundTransparency = 1,
         Text = tostring(State.Strength),
         TextColor3 = Config.Accent,
         Font = Enum.Font.GothamBold,
-        TextSize = 12
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Right
     }, Card)
 
-    local Slider = Create("TextButton", {
-        Position = UDim2.fromOffset(12, 48),
-        Size = UDim2.new(1, -24, 0, 12),
-        BackgroundColor3 = Color3.fromRGB(55, 55, 60),
-        Text = ""
+    local MaxLabel = Create("TextLabel", {
+        Position = UDim2.fromOffset(13, 33),
+        Size = UDim2.new(1, -26, 0, 16),
+        BackgroundTransparency = 1,
+        Text = T("Maximum"),
+        TextColor3 = Config.Muted,
+        Font = Enum.Font.Gotham,
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left
     }, Card)
 
-    Corner(Slider, 6)
+    local Bar = Create("Frame", {
+        Position = UDim2.fromOffset(13, 68),
+        Size = UDim2.new(1, -26, 0, 10),
+        BackgroundColor3 = Color3.fromRGB(50, 50, 58),
+        BorderSizePixel = 0
+    }, Card)
+
+    Round(Bar, 6)
 
     local Fill = Create("Frame", {
-        Size = UDim2.new(0.1, 0, 1, 0),
+        Size = UDim2.new(State.Strength / 2000, 0, 1, 0),
         BackgroundColor3 = Config.Accent,
         BorderSizePixel = 0
-    }, Slider)
+    }, Bar)
 
-    Corner(Fill, 6)
+    Round(Fill, 6)
 
-    local function SetStrength(x)
+    local Knob = Create("Frame", {
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(State.Strength / 2000, 0, 0.5, 0),
+        Size = UDim2.fromOffset(17, 17),
+        BackgroundColor3 = Config.Text,
+        BorderSizePixel = 0
+    }, Bar)
+
+    Round(Knob, 20)
+    Outline(Knob, Config.Accent)
+
+    local dragging = false
+
+    local function SetValue(positionX)
         local percent = math.clamp(
-            (x - Slider.AbsolutePosition.X) /
-            Slider.AbsoluteSize.X,
-            0, 1
+            (positionX - Bar.AbsolutePosition.X) /
+            Bar.AbsoluteSize.X,
+            0,
+            1
         )
 
-        State.Strength = math.floor(percent * 1000)
+        State.Strength = math.clamp(
+            math.floor(percent * 2000 + 0.5),
+            0,
+            2000
+        )
+
         Value.Text = tostring(State.Strength)
 
-        Animate(Fill, {
+        Tween(Fill, {
             Size = UDim2.new(percent, 0, 1, 0)
-        })
+        }, 0.08)
+
+        Tween(Knob, {
+            Position = UDim2.new(percent, 0, 0.5, 0)
+        }, 0.08)
     end
 
-    Slider.Activated:Connect(function()
-        SetStrength(UserInputService:GetMouseLocation().X)
+    Bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            SetValue(input.Position.X)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+            SetValue(input.Position.X)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
     end)
 end
 
--- TABS
+--==================================================
+-- LANGUAGE SELECTOR
+--==================================================
 
-local Tabs = {}
-local CurrentSearch = ""
+local function CreateLanguageSelector()
+    local Card = Create("Frame", {
+        Size = UDim2.new(1, -4, 0, 105),
+        BackgroundColor3 = Config.Card,
+        BorderSizePixel = 0
+    }, Page)
 
-local function LoadTab(tabName)
-    State.CurrentTab = tabName
-    PageTitle.Text = tabName
+    Round(Card, 8)
+    Outline(Card)
+
+    Create("TextLabel", {
+        Position = UDim2.fromOffset(13, 8),
+        Size = UDim2.new(1, -26, 0, 25),
+        BackgroundTransparency = 1,
+        Text = T("SelectLanguage"),
+        TextColor3 = Config.Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left
+    }, Card)
+
+    local English = Create("TextButton", {
+        Position = UDim2.fromOffset(13, 45),
+        Size = UDim2.new(0.5, -19, 0, 36),
+        BackgroundColor3 =
+            State.Language == "EN" and Config.Accent or Config.Element,
+        Text = "English",
+        TextColor3 = Config.Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = 11,
+        AutoButtonColor = false
+    }, Card)
+
+    Round(English, 7)
+
+    local Russian = Create("TextButton", {
+        Position = UDim2.new(0.5, 6, 0, 45),
+        Size = UDim2.new(0.5, -19, 0, 36),
+        BackgroundColor3 =
+            State.Language == "RU" and Config.Accent or Config.Element,
+        Text = "Русский",
+        TextColor3 = Config.Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = 11,
+        AutoButtonColor = false
+    }, Card)
+
+    Round(Russian, 7)
+
+    English.Activated:Connect(function()
+        State.Language = "EN"
+        RefreshPage()
+    end)
+
+    Russian.Activated:Connect(function()
+        State.Language = "RU"
+        RefreshPage()
+    end)
+end
+
+--==================================================
+-- RESET SETTINGS
+--==================================================
+
+local function ResetSettings()
+    State.Strength = 100
+
+    for key in pairs(State.Toggles) do
+        State.Toggles[key] = false
+    end
+
+    RefreshPage()
+end
+
+--==================================================
+-- PAGE REFRESH
+--==================================================
+
+RefreshPage = function()
+    PageTitle.Text = T(State.CurrentTab)
+    Search.PlaceholderText = T("Search")
 
     for _, child in ipairs(Page:GetChildren()) do
-        if child:IsA("GuiObject") then
+        if child:IsA("GuiObject")
+            and child ~= PageLayout then
             child:Destroy()
         end
     end
 
-    if tabName == "FLING" then
+    if State.CurrentTab == "FLING" then
         CreateStrength()
     end
 
-    for _, name in ipairs(Functions[tabName]) do
-        if name:lower():find(CurrentSearch:lower(), 1, true) then
-            CreateCard(name)
-        end
-    end
+    for _, key in ipairs(Functions[State.CurrentTab]) do
+        local translated = T(key)
 
-    for name, button in pairs(Tabs) do
-        button.BackgroundColor3 =
-            name == tabName and Config.Accent or Config.Element
-    end
-end
+        local matches =
+            State.Search == ""
+            or translated:lower():find(State.Search:lower(), 1, true)
+            or key:lower():find(State.Search:lower(), 1, true)
 
-local function CreateTab(name, order)
-    local Button = Create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 38),
-        BackgroundColor3 = Config.Element,
-        Text = name,
-        TextColor3 = Config.Text,
-        Font = Enum.Font.GothamBold,
-        TextSize = 12,
-        LayoutOrder = order
-    }, TabList)
+        if matches then
+            if key == "Language" then
+                CreateLanguageSelector()
 
-    Corner(Button, 7)
-    Tabs[name] = Button
+            elseif key == "ResetSettings" then
+                local Card = Create("Frame", {
+                    Size = UDim2.new(1, -4, 0, 66),
+                    BackgroundColor3 = Config.Card,
+                    BorderSizePixel = 0
+                }, Page)
 
-    Button.Activated:Connect(function()
-        LoadTab(name)
-    end)
-end
+                Round(Card, 8)
 
-CreateTab("FLING", 1)
-CreateTab("ANTI", 2)
-CreateTab("FUN", 3)
-CreateTab("SETTINGS", 4)
+                Create("TextLabel", {
+                    Position = UDim2.fromOffset(13, 5),
+                    Size = UDim2.new(1, -100, 1, -10),
+                    BackgroundTransparency = 1,
+                    Text = translated,
+                    TextColor3 = Config.Text,
+                    Font = Enum.Font.GothamSemibold,
+                    TextSize = 12,
+                    TextXAlignment = Enum.TextXAlignment.Left
+                }, Card)
 
--- SEARCH
+                local Reset = Create("TextButton", {
+                    Position = UDim2.new(1, -85, 0.5, -14),
+                    Size = UDim2.fromOffset(72, 28),
+                    BackgroundColor3 = Config.Red,
+                    Text = "RESET",
+                    TextColor3 = Config.Text,
+                    Font = Enum.Font.GothamBold,
+                    TextSize = 10
+                }, Card)
 
-Search:GetPropertyChangedSignal("Text"):Connect(function()
-    CurrentSearch = Search.Text
-    LoadTab(State.CurrentTab)
-end)
+                Round(Reset, 7)
 
--- MINIMIZE
-
-local OldSize = Main.Size
-
-Minimize.Activated:Connect(function()
-    State.Minimized = not State.Minimized
-
-    Sidebar.Visible = not State.Minimized
-    Content.Visible = not State.Minimized
-
-    if State.Minimized then
-        Animate(Main, {
-            Size = UDim2.fromOffset(260, 48)
-        })
-    else
-        Animate(Main, {
-            Size = OldSize
-        })
-    end
-end)
-
--- CLOSE
-
-Close.Activated:Connect(function()
-    Screen:Destroy()
-end)
-
--- DRAG
-
-local Dragging = false
-local DragStart
-local StartPosition
-
-Top.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-
-        Dragging = true
-        DragStart = input.Position
-        StartPosition = Main.Position
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if Dragging and (
-        input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch
-    ) then
-
-        local delta = input.Position - DragStart
-
-        Main.Position = UDim2.new(
-            StartPosition.X.Scale,
-            StartPosition.X.Offset + delta.X,
-            StartPosition.Y.Scale,
-            StartPosition.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-        Dragging = false
-    end
-end)
-
--- START
-
-LoadTab("FLING")
-
-print("FlingControl V2.0 loaded successfully")
+                Reset.Activated:Connec
