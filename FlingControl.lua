@@ -1,805 +1,504 @@
 
 --[[
-    FLING CONTROL V1.9 BLACK EDITION
-    Mobile Interface Edition
-    Safe GUI demonstration for own Roblox project
-
-    Features:
-    - Four working navigation tabs
-    - Black interface
-    - Compact minimize / restore
-    - Draggable header
-    - Mobile-friendly scrolling
-    - Strength display controls
-    - Settings and reset
-    - Demo toggles
+    FlingControl V2.0
+    GLOBAL UPDATE | BLACK EDITION
+    GUI ONLY
+    Designed for Roblox LocalScript
 ]]
 
---==================================================
--- SERVICES
---==================================================
-
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
---==================================================
--- CONFIGURATION
---==================================================
+-- SETTINGS
 
-local CONFIG = {
-    Title = "FLING CONTROL",
-    Version = "V1.9",
-
-    MainWidth = 0.88,
-    MainHeight = 0.78,
-
-    CompactWidth = 230,
-    CompactHeight = 48,
-
-    Background = Color3.fromRGB(0, 0, 0),
-    Panel = Color3.fromRGB(9, 9, 9),
-    Button = Color3.fromRGB(24, 24, 24),
-
-    Accent = Color3.fromRGB(35, 100, 220),
-    AccentDark = Color3.fromRGB(20, 65, 125),
-
-    Text = Color3.fromRGB(255, 255, 255),
-    MutedText = Color3.fromRGB(160, 160, 160),
+local Config = {
+    Background = Color3.fromRGB(12, 12, 14),
+    Panel = Color3.fromRGB(19, 19, 22),
+    Element = Color3.fromRGB(29, 29, 34),
+    Accent = Color3.fromRGB(45, 115, 190),
+    Text = Color3.fromRGB(240, 240, 245),
+    Muted = Color3.fromRGB(145, 145, 155),
+    Enabled = Color3.fromRGB(40, 145, 90)
 }
-
---==================================================
--- STATE
---==================================================
 
 local State = {
-    Minimized = false,
     CurrentTab = "FLING",
-
-    Strength = 100,
-
-    Notifications = true,
-    DarkMode = true,
-
+    Minimized = false,
     Toggles = {},
+    Strength = 100
 }
 
---==================================================
--- CLEAN OLD GUI
---==================================================
+-- CLEANUP
 
-local OldGui = PlayerGui:FindFirstChild("FlingControlV19")
-
-if OldGui then
-    OldGui:Destroy()
+local Old = PlayerGui:FindFirstChild("FlingControlV2")
+if Old then
+    Old:Destroy()
 end
 
---==================================================
--- GUI CREATION
---==================================================
+-- HELPERS
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "FlingControlV19"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = PlayerGui
+local function Create(class, properties, parent)
+    local object = Instance.new(class)
 
---==================================================
--- HELPER FUNCTIONS
---==================================================
-
-local function CreateCorner(object, radius)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius or 8)
-    corner.Parent = object
-    return corner
-end
-
-local function CreateStroke(object, color, thickness)
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = color or CONFIG.Accent
-    stroke.Thickness = thickness or 1
-    stroke.Parent = object
-    return stroke
-end
-
-local function CreatePadding(object, top, left, bottom, right)
-    local padding = Instance.new("UIPadding")
-
-    padding.PaddingTop = UDim.new(0, top or 0)
-    padding.PaddingLeft = UDim.new(0, left or 0)
-    padding.PaddingBottom = UDim.new(0, bottom or 0)
-    padding.PaddingRight = UDim.new(0, right or 0)
-
-    padding.Parent = object
-    return padding
-end
-
-local function CreateLabel(parent, text, height, size)
-    local label = Instance.new("TextLabel")
-
-    label.Size = UDim2.new(1, -4, 0, height or 32)
-    label.BackgroundTransparency = 1
-
-    label.Text = text
-    label.TextColor3 = CONFIG.Text
-
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = size or 14
-
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = parent
-
-    return label
-end
-
-local function CreateButton(parent, text, height)
-    local button = Instance.new("TextButton")
-
-    button.Size = UDim2.new(1, -4, 0, height or 42)
-
-    button.BackgroundColor3 = CONFIG.Button
-    button.BorderSizePixel = 0
-
-    button.Text = text
-    button.TextColor3 = CONFIG.Text
-
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 13
-
-    button.AutoButtonColor = true
-    button.Parent = parent
-
-    CreateCorner(button, 7)
-
-    return button
-end
-
-local function CreatePage(name)
-    local page = Instance.new("ScrollingFrame")
-
-    page.Name = name
-    page.Size = UDim2.new(1, -12, 1, -12)
-    page.Position = UDim2.new(0, 6, 0, 6)
-
-    page.BackgroundTransparency = 1
-    page.BorderSizePixel = 0
-
-    page.ScrollBarThickness = 3
-    page.ScrollBarImageColor3 = CONFIG.Accent
-
-    page.CanvasSize = UDim2.new(0, 0, 0, 0)
-    page.Visible = false
-
-    page.Parent = Content
-
-    CreatePadding(page, 4, 4, 8, 4)
-
-    local layout = Instance.new("UIListLayout")
-
-    layout.Padding = UDim.new(0, 8)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    layout.Parent = page
-
-    layout:GetPropertyChangedSignal(
-        "AbsoluteContentSize"
-    ):Connect(function()
-
-        page.CanvasSize = UDim2.new(
-            0,
-            0,
-            0,
-            layout.AbsoluteContentSize.Y + 15
-        )
-    end)
-
-    Pages[name] = page
-
-    return page
-end
-
---==================================================
--- MAIN WINDOW
---==================================================
-
-local Main = Instance.new("Frame")
-
-Main.Name = "Main"
-Main.Size = UDim2.new(
-    CONFIG.MainWidth,
-    0,
-    CONFIG.MainHeight,
-    0
-)
-
-Main.Position = UDim2.new(0.06, 0, 0.11, 0)
-
-Main.BackgroundColor3 = CONFIG.Background
-Main.BorderSizePixel = 0
-
-Main.ClipsDescendants = true
-Main.Parent = ScreenGui
-
-CreateCorner(Main, 11)
-CreateStroke(Main, CONFIG.Accent, 1)
-
---==================================================
--- HEADER
---==================================================
-
-local Header = Instance.new("Frame")
-
-Header.Name = "Header"
-Header.Size = UDim2.new(1, 0, 0, 48)
-
-Header.BackgroundColor3 = CONFIG.Panel
-Header.BorderSizePixel = 0
-
-Header.Parent = Main
-
-local Title = Instance.new("TextLabel")
-
-Title.Size = UDim2.new(1, -105, 1, 0)
-Title.Position = UDim2.new(0, 12, 0, 0)
-
-Title.BackgroundTransparency = 1
-
-Title.Text = CONFIG.Title .. "  " .. CONFIG.Version
-Title.TextColor3 = CONFIG.Text
-
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 13
-
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = Header
-
-local function HeaderButton(text, x)
-    local button = Instance.new("TextButton")
-
-    button.Size = UDim2.new(0, 34, 0, 30)
-    button.Position = UDim2.new(1, x, 0, 9)
-
-    button.BackgroundColor3 = CONFIG.Button
-    button.TextColor3 = CONFIG.Text
-
-    button.Text = text
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 17
-
-    button.Parent = Header
-
-    CreateCorner(button, 6)
-
-    return button
-end
-
-local MinimizeButton = HeaderButton("−", -82)
-local CloseButton = HeaderButton("X", -42)
-
---==================================================
--- BODY
---==================================================
-
-local Body = Instance.new("Frame")
-
-Body.Name = "Body"
-
-Body.Position = UDim2.new(0, 8, 0, 56)
-Body.Size = UDim2.new(1, -16, 1, -64)
-
-Body.BackgroundTransparency = 1
-Body.Parent = Main
-
---==================================================
--- SIDEBAR
---==================================================
-
-local Sidebar = Instance.new("Frame")
-
-Sidebar.Name = "Sidebar"
-
-Sidebar.Size = UDim2.new(0.29, 0, 1, 0)
-
-Sidebar.BackgroundColor3 = CONFIG.Panel
-Sidebar.BorderSizePixel = 0
-
-Sidebar.Parent = Body
-
-CreateCorner(Sidebar, 8)
-CreatePadding(Sidebar, 9, 6, 9, 6)
-
-local SidebarLayout = Instance.new("UIListLayout")
-
-SidebarLayout.Padding = UDim.new(0, 8)
-SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-SidebarLayout.Parent = Sidebar
-
---==================================================
--- CONTENT
---==================================================
-
-local Content = Instance.new("Frame")
-
-Content.Name = "Content"
-
-Content.Position = UDim2.new(0.29, 8, 0, 0)
-Content.Size = UDim2.new(0.71, -8, 1, 0)
-
-Content.BackgroundColor3 = CONFIG.Panel
-Content.BorderSizePixel = 0
-
-Content.ClipsDescendants = true
-Content.Parent = Body
-
-CreateCorner(Content, 8)
-
---==================================================
--- PAGE STORAGE
---==================================================
-
-local Pages = {}
-local TabButtons = {}
-
---==================================================
--- TOGGLE CREATION
---==================================================
-
-local function AddToggle(page, name, description, callback)
-    State.Toggles[name] = false
-
-    local container = Instance.new("Frame")
-
-    container.Size = UDim2.new(1, -4, 0, 52)
-    container.BackgroundColor3 = CONFIG.Button
-
-    container.BorderSizePixel = 0
-    container.Parent = page
-
-    CreateCorner(container, 7)
-
-    local label = Instance.new("TextLabel")
-
-    label.Size = UDim2.new(0.65, 0, 1, 0)
-    label.Position = UDim2.new(0, 10, 0, 0)
-
-    label.BackgroundTransparency = 1
-
-    label.Text = name
-    label.TextColor3 = CONFIG.Text
-
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 12
-
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = container
-
-    local switch = Instance.new("TextButton")
-
-    switch.Size = UDim2.new(0, 54, 0, 28)
-    switch.Position = UDim2.new(1, -64, 0.5, -14)
-
-    switch.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-
-    switch.Text = "OFF"
-    switch.TextColor3 = CONFIG.Text
-
-    switch.Font = Enum.Font.GothamBold
-    switch.TextSize = 11
-
-    switch.Parent = container
-
-    CreateCorner(switch, 6)
-
-    switch.Activated:Connect(function()
-        State.Toggles[name] = not State.Toggles[name]
-
-        local enabled = State.Toggles[name]
-
-        switch.Text = enabled and "ON" or "OFF"
-
-        switch.BackgroundColor3 = enabled
-            and CONFIG.AccentDark
-            or Color3.fromRGB(45, 45, 45)
-
-        if callback then
-            callback(enabled)
-        end
-    end)
-
-    return container
-end
-
---==================================================
--- TAB CREATION
---==================================================
-
-local function AddTab(name, order)
-    local button = Instance.new("TextButton")
-
-    button.Name = name .. "Tab"
-    button.LayoutOrder = order
-
-    button.Size = UDim2.new(1, 0, 0, 42)
-
-    button.BackgroundColor3 = CONFIG.Button
-    button.BorderSizePixel = 0
-
-    button.Text = name
-    button.TextColor3 = CONFIG.Text
-
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 11
-
-    button.Parent = Sidebar
-
-    CreateCorner(button, 7)
-
-    local page = CreatePage(name)
-
-    TabButtons[name] = button
-
-    button.Activated:Connect(function()
-        State.CurrentTab = name
-
-        for pageName, otherPage in pairs(Pages) do
-            otherPage.Visible = pageName == name
-
-            TabButtons[pageName].BackgroundColor3 =
-                pageName == name
-                and CONFIG.AccentDark
-                or CONFIG.Button
-        end
-    end)
-
-    return page
-end
-
---==================================================
--- CREATE ALL FOUR TABS
---==================================================
-
-local FlingPage = AddTab("FLING", 1)
-local SettingsPage = AddTab("SETTINGS", 2)
-local AntiPage = AddTab("ANTI", 3)
-local FunPage = AddTab("FUN", 4)
-
---==================================================
--- FLING PAGE
---==================================================
-
-CreateLabel(FlingPage, "FLING CONTROL", 34, 15)
-
-CreateLabel(FlingPage, "Strength settings", 28, 12)
-
-local StrengthLabel = CreateLabel(
-    FlingPage,
-    "Strength: " .. State.Strength,
-    34,
-    13
-)
-
-local function UpdateStrength(amount)
-    State.Strength = math.clamp(
-        State.Strength + amount,
-        100,
-        10000
-    )
-
-    StrengthLabel.Text = "Strength: " .. State.Strength
-end
-
-local StrengthPlus = CreateButton(
-    FlingPage,
-    "+ 100",
-    40
-)
-
-StrengthPlus.Activated:Connect(function()
-    UpdateStrength(100)
-end)
-
-local StrengthMinus = CreateButton(
-    FlingPage,
-    "- 100",
-    40
-)
-
-StrengthMinus.Activated:Connect(function()
-    UpdateStrength(-100)
-end)
-
-local StrengthPlusBig = CreateButton(
-    FlingPage,
-    "+ 1000",
-    40
-)
-
-StrengthPlusBig.Activated:Connect(function()
-    UpdateStrength(1000)
-end)
-
-local StrengthMinusBig = CreateButton(
-    FlingPage,
-    "- 1000",
-    40
-)
-
-StrengthMinusBig.Activated:Connect(function()
-    UpdateStrength(-1000)
-end)
-
-CreateLabel(
-    FlingPage,
-    "Interface demonstration only",
-    30,
-    10
-)
-
---==================================================
--- ANTI PAGE
---==================================================
-
-CreateLabel(AntiPage, "ANTI SETTINGS", 34, 15)
-
-AddToggle(
-    AntiPage,
-    "Anti Grab Demo",
-    nil
-)
-
-AddToggle(
-    AntiPage,
-    "Anti Ragdoll Demo",
-    nil
-)
-
-AddToggle(
-    AntiPage,
-    "Anti Snowball Demo",
-    nil
-)
-
-AddToggle(
-    AntiPage,
-    "Anti Explosion Demo",
-    nil
-)
-
-AddToggle(
-    AntiPage,
-    "Anti Paint Demo",
-    nil
-)
-
-AddToggle(
-    AntiPage,
-    "Anti Fire Demo",
-    nil
-)
-
-CreateLabel(
-    AntiPage,
-    "These switches only demonstrate UI state.",
-    42,
-    10
-)
-
---==================================================
--- FUN PAGE
---==================================================
-
-CreateLabel(FunPage, "FUN SETTINGS", 34, 15)
-
-AddToggle(
-    FunPage,
-    "Wings Demo",
-    nil
-)
-
-AddToggle(
-    FunPage,
-    "Dynamic Wings Demo",
-    nil
-)
-
-AddToggle(
-    FunPage,
-    "Extra Wings Demo",
-    nil
-)
-
-AddToggle(
-    FunPage,
-    "Mech Suit Demo",
-    nil
-)
-
-AddToggle(
-    FunPage,
-    "Effects Demo",
-    nil
-)
-
-AddToggle(
-    FunPage,
-    "Animations Demo",
-    nil
-)
-
---==================================================
--- SETTINGS PAGE
---==================================================
-
-CreateLabel(SettingsPage, "GENERAL SETTINGS", 34, 15)
-
-AddToggle(
-    SettingsPage,
-    "Show Notifications",
-    nil,
-    function(enabled)
-        State.Notifications = enabled
-    end
-)
-
-AddToggle(
-    SettingsPage,
-    "Dark Mode",
-    nil,
-    function(enabled)
-        State.DarkMode = enabled
-    end
-)
-
-local VersionLabel = CreateLabel(
-    SettingsPage,
-    "Fling Control V1.9",
-    34,
-    12
-)
-
-VersionLabel.TextColor3 = CONFIG.MutedText
-
---==================================================
--- RESET BUTTON
---==================================================
-
-local ResetButton = CreateButton(
-    SettingsPage,
-    "RESET INTERFACE",
-    44
-)
-
-ResetButton.Activated:Connect(function()
-    State.Strength = 100
-
-    StrengthLabel.Text = "Strength: 100"
-
-    for name in pairs(State.Toggles) do
-        State.Toggles[name] = false
+    for property, value in pairs(properties) do
+        object[property] = value
     end
 
-    for _, page in pairs(Pages) do
-        for _, object in ipairs(page:GetDescendants()) do
-            if object:IsA("TextButton") then
-                if object.Text == "ON" then
-                    object.Text = "OFF"
-                    object.BackgroundColor3 =
-                        Color3.fromRGB(45, 45, 45)
-                end
-            end
-        end
-    end
-end)
-
---==================================================
--- TAB INITIALIZATION
---==================================================
-
-for name, page in pairs(Pages) do
-    page.Visible = name == "FLING"
+    object.Parent = parent
+    return object
 end
 
-TabButtons.FLING.BackgroundColor3 = CONFIG.AccentDark
+local function Corner(parent, radius)
+    return Create("UICorner", {
+        CornerRadius = UDim.new(0, radius or 8)
+    }, parent)
+end
 
---==================================================
--- MINIMIZE / RESTORE
---==================================================
+local function Stroke(parent, color)
+    return Create("UIStroke", {
+        Color = color or Color3.fromRGB(48, 48, 55),
+        Thickness = 1
+    }, parent)
+end
 
-local ExpandedSize = UDim2.new(
-    CONFIG.MainWidth,
-    0,
-    CONFIG.MainHeight,
-    0
-)
-
-local CompactSize = UDim2.new(
-    0,
-    CONFIG.CompactWidth,
-    0,
-    CONFIG.CompactHeight
-)
-
-local function SetMinimized(value)
-    State.Minimized = value
-
-    local targetSize = value
-        and CompactSize
-        or ExpandedSize
-
-    Body.Visible = not value
-    CloseButton.Visible = not value
-
-    MinimizeButton.Text = value and "+" or "−"
-
-    MinimizeButton.Position = value
-        and UDim2.new(1, -42, 0, 9)
-        or UDim2.new(1, -82, 0, 9)
-
+local function Animate(object, properties)
     TweenService:Create(
-        Main,
-        TweenInfo.new(
-            0.2,
-            Enum.EasingStyle.Quad,
-            Enum.EasingDirection.Out
-        ),
-        {
-            Size = targetSize
-        }
+        object,
+        TweenInfo.new(0.18, Enum.EasingStyle.Quad),
+        properties
     ):Play()
 end
 
-MinimizeButton.Activated:Connect(function()
-    SetMinimized(not State.Minimized)
+-- SCREEN GUI
+
+local Screen = Create("ScreenGui", {
+    Name = "FlingControlV2",
+    ResetOnSpawn = false,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+}, PlayerGui)
+
+-- MAIN WINDOW
+
+local Main = Create("Frame", {
+    Name = "Main",
+    Size = UDim2.fromOffset(650, 430),
+    Position = UDim2.new(0.5, -325, 0.5, -215),
+    BackgroundColor3 = Config.Background,
+    BorderSizePixel = 0
+}, Screen)
+
+Corner(Main, 12)
+Stroke(Main, Color3.fromRGB(55, 55, 65))
+
+-- TOP BAR
+
+local Top = Create("Frame", {
+    Size = UDim2.new(1, 0, 0, 48),
+    BackgroundColor3 = Config.Panel,
+    BorderSizePixel = 0
+}, Main)
+
+Corner(Top, 12)
+
+local Title = Create("TextLabel", {
+    Position = UDim2.fromOffset(17, 0),
+    Size = UDim2.new(1, -120, 1, 0),
+    BackgroundTransparency = 1,
+    Text = "FLING CONTROL  |  V2.0",
+    TextColor3 = Config.Text,
+    Font = Enum.Font.GothamBold,
+    TextSize = 15,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, Top)
+
+local Minimize = Create("TextButton", {
+    Position = UDim2.new(1, -76, 0, 9),
+    Size = UDim2.fromOffset(28, 28),
+    Text = "—",
+    TextColor3 = Config.Text,
+    BackgroundColor3 = Config.Element,
+    Font = Enum.Font.GothamBold,
+    TextSize = 16
+}, Top)
+
+Corner(Minimize, 7)
+
+local Close = Create("TextButton", {
+    Position = UDim2.new(1, -39, 0, 9),
+    Size = UDim2.fromOffset(28, 28),
+    Text = "×",
+    TextColor3 = Color3.fromRGB(255, 110, 110),
+    BackgroundColor3 = Config.Element,
+    Font = Enum.Font.GothamBold,
+    TextSize = 19
+}, Top)
+
+Corner(Close, 7)
+
+-- SIDEBAR
+
+local Sidebar = Create("Frame", {
+    Position = UDim2.fromOffset(10, 58),
+    Size = UDim2.new(0, 155, 1, -68),
+    BackgroundColor3 = Config.Panel,
+    BorderSizePixel = 0
+}, Main)
+
+Corner(Sidebar, 9)
+
+local Search = Create("TextBox", {
+    Position = UDim2.fromOffset(9, 10),
+    Size = UDim2.new(1, -18, 0, 34),
+    BackgroundColor3 = Config.Element,
+    Text = "",
+    PlaceholderText = "Search functions...",
+    PlaceholderColor3 = Config.Muted,
+    TextColor3 = Config.Text,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    ClearTextOnFocus = false
+}, Sidebar)
+
+Corner(Search, 7)
+
+local TabList = Create("Frame", {
+    Position = UDim2.fromOffset(8, 54),
+    Size = UDim2.new(1, -16, 1, -62),
+    BackgroundTransparency = 1
+}, Sidebar)
+
+Create("UIListLayout", {
+    Padding = UDim.new(0, 7),
+    SortOrder = Enum.SortOrder.LayoutOrder
+}, TabList)
+
+-- CONTENT
+
+local Content = Create("Frame", {
+    Position = UDim2.fromOffset(175, 58),
+    Size = UDim2.new(1, -185, 1, -68),
+    BackgroundColor3 = Config.Panel,
+    BorderSizePixel = 0
+}, Main)
+
+Corner(Content, 9)
+
+local PageTitle = Create("TextLabel", {
+    Position = UDim2.fromOffset(15, 9),
+    Size = UDim2.new(1, -30, 0, 35),
+    BackgroundTransparency = 1,
+    Text = "FLING",
+    TextColor3 = Config.Text,
+    Font = Enum.Font.GothamBold,
+    TextSize = 17,
+    TextXAlignment = Enum.TextXAlignment.Left
+}, Content)
+
+local Page = Create("ScrollingFrame", {
+    Position = UDim2.fromOffset(10, 48),
+    Size = UDim2.new(1, -20, 1, -58),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    ScrollBarThickness = 3,
+    ScrollBarImageColor3 = Config.Accent,
+    CanvasSize = UDim2.new()
+}, Content)
+
+local PageLayout = Create("UIListLayout", {
+    Padding = UDim.new(0, 8),
+    SortOrder = Enum.SortOrder.LayoutOrder
+}, Page)
+
+PageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    Page.CanvasSize = UDim2.new(
+        0, 0, 0, PageLayout.AbsoluteContentSize.Y + 12
+    )
 end)
 
---==================================================
+-- PAGE DATA
+
+local Functions = {
+    FLING = {
+        "Strength",
+        "Super Strength",
+        "Fling Settings"
+    },
+
+    ANTI = {
+        "Anti Grab",
+        "Anti Ragdoll",
+        "Anti Snowball",
+        "Anti Explosion",
+        "Anti Paint",
+        "Anti Fire",
+        "Anti Kick"
+    },
+
+    FUN = {
+        "Wings",
+        "Dynamic Wings",
+        "Extra Wings",
+        "Mech Suit"
+    },
+
+    SETTINGS = {
+        "Dark Mode",
+        "Show Notifications",
+        "Interface Scale",
+        "Reset Settings"
+    }
+}
+
+-- FUNCTION CARDS
+
+local function CreateCard(name)
+    local Card = Create("Frame", {
+        Size = UDim2.new(1, -5, 0, 65),
+        BackgroundColor3 = Config.Element,
+        BorderSizePixel = 0
+    }, Page)
+
+    Corner(Card, 8)
+
+    local Label = Create("TextLabel", {
+        Position = UDim2.fromOffset(12, 5),
+        Size = UDim2.new(1, -90, 0, 27),
+        BackgroundTransparency = 1,
+        Text = name,
+        TextColor3 = Config.Text,
+        Font = Enum.Font.GothamSemibold,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left
+    }, Card)
+
+    local Description = Create("TextLabel", {
+        Position = UDim2.fromOffset(12, 31),
+        Size = UDim2.new(1, -90, 0, 20),
+        BackgroundTransparency = 1,
+        Text = "Demonstration setting",
+        TextColor3 = Config.Muted,
+        Font = Enum.Font.Gotham,
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Left
+    }, Card)
+
+    local Toggle = Create("TextButton", {
+        Position = UDim2.new(1, -67, 0.5, -13),
+        Size = UDim2.fromOffset(55, 26),
+        BackgroundColor3 = Color3.fromRGB(55, 55, 60),
+        Text = "OFF",
+        TextColor3 = Config.Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = 10
+    }, Card)
+
+    Corner(Toggle, 7)
+
+    State.Toggles[name] = false
+
+    Toggle.Activated:Connect(function()
+        State.Toggles[name] = not State.Toggles[name]
+
+        if State.Toggles[name] then
+            Toggle.Text = "ON"
+            Animate(Toggle, {
+                BackgroundColor3 = Config.Enabled
+            })
+        else
+            Toggle.Text = "OFF"
+            Animate(Toggle, {
+                BackgroundColor3 = Color3.fromRGB(55, 55, 60)
+            })
+        end
+    end)
+
+    return Card
+end
+
+-- STRENGTH CARD
+
+local function CreateStrength()
+    local Card = Create("Frame", {
+        Size = UDim2.new(1, -5, 0, 92),
+        BackgroundColor3 = Config.Element,
+        BorderSizePixel = 0
+    }, Page)
+
+    Corner(Card, 8)
+
+    Create("TextLabel", {
+        Position = UDim2.fromOffset(12, 7),
+        Size = UDim2.new(1, -24, 0, 25),
+        BackgroundTransparency = 1,
+        Text = "Strength",
+        TextColor3 = Config.Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left
+    }, Card)
+
+    local Value = Create("TextLabel", {
+        Position = UDim2.new(1, -65, 0, 7),
+        Size = UDim2.fromOffset(50, 25),
+        BackgroundTransparency = 1,
+        Text = tostring(State.Strength),
+        TextColor3 = Config.Accent,
+        Font = Enum.Font.GothamBold,
+        TextSize = 12
+    }, Card)
+
+    local Slider = Create("TextButton", {
+        Position = UDim2.fromOffset(12, 48),
+        Size = UDim2.new(1, -24, 0, 12),
+        BackgroundColor3 = Color3.fromRGB(55, 55, 60),
+        Text = ""
+    }, Card)
+
+    Corner(Slider, 6)
+
+    local Fill = Create("Frame", {
+        Size = UDim2.new(0.1, 0, 1, 0),
+        BackgroundColor3 = Config.Accent,
+        BorderSizePixel = 0
+    }, Slider)
+
+    Corner(Fill, 6)
+
+    local function SetStrength(x)
+        local percent = math.clamp(
+            (x - Slider.AbsolutePosition.X) /
+            Slider.AbsoluteSize.X,
+            0, 1
+        )
+
+        State.Strength = math.floor(percent * 1000)
+        Value.Text = tostring(State.Strength)
+
+        Animate(Fill, {
+            Size = UDim2.new(percent, 0, 1, 0)
+        })
+    end
+
+    Slider.Activated:Connect(function()
+        SetStrength(UserInputService:GetMouseLocation().X)
+    end)
+end
+
+-- TABS
+
+local Tabs = {}
+local CurrentSearch = ""
+
+local function LoadTab(tabName)
+    State.CurrentTab = tabName
+    PageTitle.Text = tabName
+
+    for _, child in ipairs(Page:GetChildren()) do
+        if child:IsA("GuiObject") then
+            child:Destroy()
+        end
+    end
+
+    if tabName == "FLING" then
+        CreateStrength()
+    end
+
+    for _, name in ipairs(Functions[tabName]) do
+        if name:lower():find(CurrentSearch:lower(), 1, true) then
+            CreateCard(name)
+        end
+    end
+
+    for name, button in pairs(Tabs) do
+        button.BackgroundColor3 =
+            name == tabName and Config.Accent or Config.Element
+    end
+end
+
+local function CreateTab(name, order)
+    local Button = Create("TextButton", {
+        Size = UDim2.new(1, 0, 0, 38),
+        BackgroundColor3 = Config.Element,
+        Text = name,
+        TextColor3 = Config.Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        LayoutOrder = order
+    }, TabList)
+
+    Corner(Button, 7)
+    Tabs[name] = Button
+
+    Button.Activated:Connect(function()
+        LoadTab(name)
+    end)
+end
+
+CreateTab("FLING", 1)
+CreateTab("ANTI", 2)
+CreateTab("FUN", 3)
+CreateTab("SETTINGS", 4)
+
+-- SEARCH
+
+Search:GetPropertyChangedSignal("Text"):Connect(function()
+    CurrentSearch = Search.Text
+    LoadTab(State.CurrentTab)
+end)
+
+-- MINIMIZE
+
+local OldSize = Main.Size
+
+Minimize.Activated:Connect(function()
+    State.Minimized = not State.Minimized
+
+    Sidebar.Visible = not State.Minimized
+    Content.Visible = not State.Minimized
+
+    if State.Minimized then
+        Animate(Main, {
+            Size = UDim2.fromOffset(260, 48)
+        })
+    else
+        Animate(Main, {
+            Size = OldSize
+        })
+    end
+end)
+
 -- CLOSE
---==================================================
 
-CloseButton.Activated:Connect(function()
-    ScreenGui:Destroy()
+Close.Activated:Connect(function()
+    Screen:Destroy()
 end)
 
---==================================================
--- DRAG SUPPORT
---==================================================
+-- DRAG
 
 local Dragging = false
-local DragInput = nil
-local DragStart = nil
-local StartPosition = nil
+local DragStart
+local StartPosition
 
-Header.InputBegan:Connect(function(input)
+Top.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
         or input.UserInputType == Enum.UserInputType.Touch then
 
         Dragging = true
         DragStart = input.Position
         StartPosition = Main.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                Dragging = false
-            end
-        end)
-    end
-end)
-
-Header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch then
-
-        DragInput = input
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if Dragging and input == DragInput then
+    if Dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+
         local delta = input.Position - DragStart
 
         Main.Position = UDim2.new(
@@ -811,67 +510,15 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
---==================================================
--- RESPONSIVE SCALE
---==================================================
-
-local UIScale = Instance.new("UIScale")
-UIScale.Scale = 1
-UIScale.Parent = Main
-
-local function UpdateScale()
-    local camera = workspace.CurrentCamera
-
-    if not camera then
-        return
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        Dragging = false
     end
+end)
 
-    local viewport = camera.ViewportSize
+-- START
 
-    if viewport.X < 450 then
-        UIScale.Scale = 0.92
-    else
-        UIScale.Scale = 1
-    end
-end
+LoadTab("FLING")
 
-UpdateScale()
-
-if workspace.CurrentCamera then
-    workspace.CurrentCamera:GetPropertyChangedSignal(
-        "ViewportSize"
-    ):Connect(UpdateScale)
-end
-
---==================================================
--- NOTIFICATION HELPER
---==================================================
-
-local function Notify(text)
-    if not State.Notifications then
-        return
-    end
-
-    pcall(function()
-        game:GetService("StarterGui"):SetCore(
-            "SendNotification",
-            {
-                Title = CONFIG.Title,
-                Text = text,
-                Duration = 3
-            }
-        )
-    end)
-end
-
---==================================================
--- INITIALIZATION
---==================================================
-
-Notify("Interface loaded successfully")
-
-print("--------------------------------")
-print("FLING CONTROL V1.9")
-print("BLACK EDITION")
-print("Interface loaded")
-print("--------------------------------")
+print("FlingControl V2.0 loaded successfully")
