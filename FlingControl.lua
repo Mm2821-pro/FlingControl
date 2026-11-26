@@ -1,6 +1,7 @@
 
--- ARKON HUB V4 | BLACK & BLUE DEMO
--- Visual-only interface. No actions against real players.
+-- ARKON HUB V5 | BLACK & BLUE
+-- Visual demo interface only.
+-- Does not fling, kick, grab or target real players.
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -9,17 +10,20 @@ local TweenService = game:GetService("TweenService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local OLD = PlayerGui:FindFirstChild("ARKON_HUB_V4")
+local DEMO_KEY = "AR-DUZ4-VA58-DURY"
+
+local OLD = PlayerGui:FindFirstChild("ARKON_HUB_V5")
 if OLD then OLD:Destroy() end
 
-local Theme = {
-    Background = Color3.fromRGB(5, 5, 7),
-    Panel = Color3.fromRGB(10, 10, 12),
-    Button = Color3.fromRGB(15, 15, 18),
-    Blue = Color3.fromRGB(0, 145, 255),
-    White = Color3.fromRGB(240, 240, 245),
-    Gray = Color3.fromRGB(135, 135, 145),
-    Green = Color3.fromRGB(50, 210, 120)
+local C = {
+    BG = Color3.fromRGB(5, 5, 7),
+    PANEL = Color3.fromRGB(12, 12, 15),
+    BUTTON = Color3.fromRGB(18, 18, 22),
+    BLUE = Color3.fromRGB(0, 145, 255),
+    WHITE = Color3.fromRGB(240, 240, 245),
+    GRAY = Color3.fromRGB(140, 140, 150),
+    GREEN = Color3.fromRGB(60, 210, 130),
+    RED = Color3.fromRGB(230, 75, 75)
 }
 
 local function New(class, props, parent)
@@ -31,342 +35,415 @@ local function New(class, props, parent)
     return obj
 end
 
-local function Corner(parent, radius)
+local function Corner(obj, radius)
     New("UICorner", {
-        CornerRadius = UDim.new(0, radius or 8)
-    }, parent)
+        CornerRadius = UDim.new(0, radius or 7)
+    }, obj)
 end
 
-local function Stroke(parent, color, thickness)
+local function Outline(obj, color, thickness)
     return New("UIStroke", {
-        Color = color or Theme.Blue,
+        Color = color or C.BLUE,
         Thickness = thickness or 1
-    }, parent)
+    }, obj)
 end
 
-local function Label(parent, text, size, position, dimensions)
+local function MakeLabel(parent, text, size, pos, dimensions)
     return New("TextLabel", {
         BackgroundTransparency = 1,
         Text = text,
-        TextColor3 = Theme.White,
+        TextColor3 = C.WHITE,
         TextSize = size or 14,
         Font = Enum.Font.Gotham,
-        Position = position,
-        Size = dimensions,
-        TextXAlignment = Enum.TextXAlignment.Left
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Position = pos,
+        Size = dimensions
     }, parent)
 end
 
 local Gui = New("ScreenGui", {
-    Name = "ARKON_HUB_V4",
+    Name = "ARKON_HUB_V5",
     ResetOnSpawn = false,
     ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 }, PlayerGui)
 
-local Main = New("Frame", {
-    Name = "Main",
-    BackgroundColor3 = Theme.Background,
-    BorderSizePixel = 0,
-    Size = UDim2.fromOffset(520, 430),
-    Position = UDim2.new(0.5, -260, 0.5, -215)
-}, Gui)
+local Main
+local Body
+local Header
+local Minimize
+local Close
+local OpenHub
 
-Corner(Main, 10)
-Stroke(Main, Theme.Blue, 1.5)
-
-local Scale = New("UIScale", {
-    Scale = 1
-}, Main)
-
-local function UpdateScale()
-    local camera = workspace.CurrentCamera
-    if not camera then return end
-    local viewport = camera.ViewportSize
-    Scale.Scale = math.min(1, viewport.X / 540, viewport.Y / 460)
-end
-
-UpdateScale()
-workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(UpdateScale)
-if workspace.CurrentCamera then
-    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-end
-
--- HEADER
-local Header = New("Frame", {
-    BackgroundColor3 = Theme.Panel,
-    BorderSizePixel = 0,
-    Size = UDim2.new(1, 0, 0, 43)
-}, Main)
-Corner(Header, 9)
-
-local Title = Label(Header, "ARKON HUB  |  V4", 16,
-    UDim2.fromOffset(14, 0), UDim2.new(1, -110, 1, 0))
-Title.Font = Enum.Font.GothamBold
-
-local Minimize = New("TextButton", {
-    Text = "—",
-    TextSize = 22,
-    Font = Enum.Font.GothamBold,
-    TextColor3 = Theme.Blue,
-    BackgroundColor3 = Theme.Button,
-    Size = UDim2.fromOffset(34, 29),
-    Position = UDim2.new(1, -78, 0, 7)
-}, Header)
-Corner(Minimize, 6)
-
-local Close = New("TextButton", {
-    Text = "×",
-    TextSize = 22,
-    Font = Enum.Font.GothamBold,
-    TextColor3 = Theme.White,
-    BackgroundColor3 = Theme.Button,
-    Size = UDim2.fromOffset(34, 29),
-    Position = UDim2.new(1, -39, 0, 7)
-}, Header)
-Corner(Close, 6)
-
--- DRAG
-local dragging = false
-local dragStart
-local startPosition
-local dragInput
-
-Header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPosition = Main.Position
-        dragInput = input
-    end
-end)
-
-UIS.InputChanged:Connect(function(input)
-    if dragging and (
-        input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch
-    ) then
-        local delta = input.Position - dragStart
-        Main.Position = UDim2.new(
-            startPosition.X.Scale,
-            startPosition.X.Offset + delta.X,
-            startPosition.Y.Scale,
-            startPosition.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UIS.InputEnded:Connect(function(input)
-    if input == dragInput then
-        dragging = false
-        dragInput = nil
-    end
-end)
-
--- MINIMIZE / CLOSE
-local minimized = false
-local oldSize = Main.Size
-
-Minimize.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    Main.Size = minimized and UDim2.fromOffset(520, 43) or oldSize
-    Minimize.Text = minimized and "+" or "—"
-end)
-
-Close.MouseButton1Click:Connect(function()
-    Gui:Destroy()
-end)
-
--- BODY
-local Body = New("Frame", {
-    BackgroundTransparency = 1,
-    Position = UDim2.fromOffset(0, 49),
-    Size = UDim2.new(1, 0, 1, -55)
-}, Main)
-
-local Sidebar = New("Frame", {
-    BackgroundColor3 = Theme.Panel,
-    BorderSizePixel = 0,
-    Position = UDim2.fromOffset(8, 0),
-    Size = UDim2.new(0, 135, 1, -8)
-}, Body)
-Corner(Sidebar, 8)
-
-local Content = New("Frame", {
-    BackgroundColor3 = Theme.Panel,
-    BorderSizePixel = 0,
-    Position = UDim2.fromOffset(151, 0),
-    Size = UDim2.new(1, -159, 1, -8)
-}, Body)
-Corner(Content, 8)
-Stroke(Content, Color3.fromRGB(35, 35, 40), 1)
-
-local PageTitle = Label(Content, "FLING", 17,
-    UDim2.fromOffset(14, 10), UDim2.new(1, -28, 0, 30))
-PageTitle.Font = Enum.Font.GothamBold
-PageTitle.TextColor3 = Theme.Blue
-
-local PageContent = New("Frame", {
-    BackgroundTransparency = 1,
-    Position = UDim2.fromOffset(12, 48),
-    Size = UDim2.new(1, -24, 1, -58)
-}, Content)
-
-local function MakeButton(parent, text, callback, y)
-    local button = New("TextButton", {
-        Text = text,
-        TextSize = 13,
-        Font = Enum.Font.Gotham,
-        TextColor3 = Theme.White,
-        BackgroundColor3 = Theme.Button,
+local function MakeWindow(width, height)
+    Main = New("Frame", {
+        Name = "Main",
+        BackgroundColor3 = C.BG,
         BorderSizePixel = 0,
-        Position = UDim2.fromOffset(0, y),
-        Size = UDim2.new(1, 0, 0, 36),
-        AutoButtonColor = false
-    }, parent)
+        Size = UDim2.fromOffset(width, height),
+        Position = UDim2.new(0.5, -width/2, 0.5, -height/2)
+    }, Gui)
+    Corner(Main, 9)
+    Outline(Main, C.BLUE, 1.5)
 
-    Corner(button, 6)
-    Stroke(button, Color3.fromRGB(35, 35, 42), 1)
+    Header = New("Frame", {
+        BackgroundColor3 = C.PANEL,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 43)
+    }, Main)
+    Corner(Header, 8)
 
-    button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.12), {
-            BackgroundColor3 = Color3.fromRGB(24, 24, 29)
-        }):Play()
+    MakeLabel(Header, "ARKON HUB  |  V5", 16,
+        UDim2.fromOffset(13, 0),
+        UDim2.new(1, -100, 1, 0)).Font = Enum.Font.GothamBold
+
+    Minimize = New("TextButton", {
+        Text = "—",
+        TextSize = 22,
+        Font = Enum.Font.GothamBold,
+        TextColor3 = C.BLUE,
+        BackgroundColor3 = C.BUTTON,
+        Size = UDim2.fromOffset(34, 29),
+        Position = UDim2.new(1, -78, 0, 7)
+    }, Header)
+    Corner(Minimize, 5)
+
+    Close = New("TextButton", {
+        Text = "×",
+        TextSize = 22,
+        Font = Enum.Font.GothamBold,
+        TextColor3 = C.WHITE,
+        BackgroundColor3 = C.BUTTON,
+        Size = UDim2.fromOffset(34, 29),
+        Position = UDim2.new(1, -39, 0, 7)
+    }, Header)
+    Corner(Close, 5)
+
+    -- Touch and mouse dragging
+    local dragging = false
+    local dragStart
+    local startPosition
+    local dragInput
+
+    Header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPosition = Main.Position
+            dragInput = input
+        end
     end)
 
-    button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.12), {
-            BackgroundColor3 = Theme.Button
-        }):Play()
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch
+        ) then
+            local delta = input.Position - dragStart
+            Main.Position = UDim2.new(
+                startPosition.X.Scale,
+                startPosition.X.Offset + delta.X,
+                startPosition.Y.Scale,
+                startPosition.Y.Offset + delta.Y
+            )
+        end
     end)
 
-    button.MouseButton1Click:Connect(callback)
-    return button
+    UIS.InputEnded:Connect(function(input)
+        if input == dragInput then
+            dragging = false
+            dragInput = nil
+        end
+    end)
+
+    Close.MouseButton1Click:Connect(function()
+        Gui:Destroy()
+    end)
 end
 
-local function MakeToggle(parent, name, y)
-    local enabled = false
-    local button
+-- KEY SYSTEM
+MakeWindow(370, 245)
 
-    button = MakeButton(parent, name .. "  [OFF]", function()
-        enabled = not enabled
-        button.Text = name .. (enabled and "  [ON]" or "  [OFF]")
-    end, y)
+local KeyPanel = New("Frame", {
+    BackgroundTransparency = 1,
+    Position = UDim2.fromOffset(18, 55),
+    Size = UDim2.new(1, -36, 1, -65)
+}, Main)
 
-    return button
-end
+MakeLabel(KeyPanel, "KEY SYSTEM", 19,
+    UDim2.fromOffset(0, 5),
+    UDim2.new(1, 0, 0, 30)).Font = Enum.Font.GothamBold
 
-local function ClearPage()
-    for _, child in ipairs(PageContent:GetChildren()) do
-        child:Destroy()
+local Description = MakeLabel(KeyPanel,
+    "Enter your access key to continue.",
+    12, UDim2.fromOffset(0, 40),
+    UDim2.new(1, 0, 0, 25))
+Description.TextColor3 = C.GRAY
+
+local KeyInput = New("TextBox", {
+    PlaceholderText = "AR-XXXX-XXXX-XXXX",
+    Text = "",
+    TextSize = 14,
+    Font = Enum.Font.Gotham,
+    TextColor3 = C.WHITE,
+    PlaceholderColor3 = C.GRAY,
+    BackgroundColor3 = C.BUTTON,
+    ClearTextOnFocus = false,
+    Position = UDim2.fromOffset(0, 78),
+    Size = UDim2.new(1, 0, 0, 39)
+}, KeyPanel)
+Corner(KeyInput, 6)
+Outline(KeyInput, C.BLUE, 1)
+
+local KeyStatus = MakeLabel(KeyPanel, "Status: Waiting for key",
+    12, UDim2.fromOffset(0, 124),
+    UDim2.new(1, 0, 0, 25))
+KeyStatus.TextColor3 = C.GRAY
+
+local CheckKey = New("TextButton", {
+    Text = "CHECK KEY",
+    TextSize = 13,
+    Font = Enum.Font.GothamBold,
+    TextColor3 = C.WHITE,
+    BackgroundColor3 = C.BUTTON,
+    Position = UDim2.fromOffset(0, 157),
+    Size = UDim2.new(1, 0, 0, 36)
+}, KeyPanel)
+Corner(CheckKey, 6)
+Outline(CheckKey, C.BLUE, 1)
+
+-- MAIN HUB
+OpenHub = function()
+    Main:Destroy()
+    MakeWindow(520, 430)
+
+    Body = New("Frame", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(0, 49),
+        Size = UDim2.new(1, 0, 1, -55)
+    }, Main)
+
+    local Sidebar = New("Frame", {
+        BackgroundColor3 = C.PANEL,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(8, 0),
+        Size = UDim2.new(0, 135, 1, -8)
+    }, Body)
+    Corner(Sidebar, 7)
+
+    local Content = New("Frame", {
+        BackgroundColor3 = C.PANEL,
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(151, 0),
+        Size = UDim2.new(1, -159, 1, -8)
+    }, Body)
+    Corner(Content, 7)
+    Outline(Content, Color3.fromRGB(40, 40, 45), 1)
+
+    local PageTitle = MakeLabel(Content, "FLING", 17,
+        UDim2.fromOffset(14, 9),
+        UDim2.new(1, -25, 0, 30))
+    PageTitle.Font = Enum.Font.GothamBold
+    PageTitle.TextColor3 = C.BLUE
+
+    local Page = New("Frame", {
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(12, 47),
+        Size = UDim2.new(1, -24, 1, -55)
+    }, Content)
+
+    local function Info(text, y)
+        local label = MakeLabel(Page, text, 12,
+            UDim2.fromOffset(2, y),
+            UDim2.new(1, -4, 0, 28))
+        label.TextColor3 = C.GRAY
+        return label
     end
-end
 
-local function AddInfo(text, y)
-    local label = Label(PageContent, text, 13,
-        UDim2.fromOffset(2, y), UDim2.new(1, -4, 0, 30))
-    label.TextColor3 = Theme.Gray
-    return label
-end
-
-local function ShowTab(tab)
-    ClearPage()
-    PageTitle.Text = tab
-
-    if tab == "FLING" then
-        AddInfo("Visual demonstration settings", 0)
-        MakeToggle(PageContent, "Fling Demo", 38)
-        MakeToggle(PageContent, "Super Strength Demo", 82)
-        MakeToggle(PageContent, "Show Strength Indicator", 126)
-
-    elseif tab == "ANTI" then
-        AddInfo("Local interface demonstration", 0)
-        MakeToggle(PageContent, "Anti Grab Demo", 38)
-        MakeToggle(PageContent, "Anti Ragdoll Demo", 82)
-        MakeToggle(PageContent, "Anti Snowball Demo", 126)
-        MakeToggle(PageContent, "Anti Explosion Demo", 170)
-        MakeToggle(PageContent, "Anti Kick Demo", 214)
-
-    elseif tab == "FUN" then
-        AddInfo("Cosmetic demo options", 0)
-        MakeToggle(PageContent, "Wings", 38)
-        MakeToggle(PageContent, "Dynamic Wings", 82)
-        MakeToggle(PageContent, "Extra Wings", 126)
-        MakeToggle(PageContent, "Mech Suit", 170)
-
-    elseif tab == "BLOBMAN" then
-        AddInfo("Test character name:", 0)
-
-        local NameInput = New("TextBox", {
-            PlaceholderText = "Enter test dummy name...",
-            Text = "",
+    local function Button(text, y, callback)
+        local b = New("TextButton", {
+            Text = text,
             TextSize = 13,
             Font = Enum.Font.Gotham,
-            TextColor3 = Theme.White,
-            PlaceholderColor3 = Theme.Gray,
-            BackgroundColor3 = Theme.Button,
-            ClearTextOnFocus = false,
-            Position = UDim2.fromOffset(0, 35),
-            Size = UDim2.new(1, 0, 0, 38)
-        }, PageContent)
-        Corner(NameInput, 6)
-        Stroke(NameInput, Theme.Blue, 1)
+            TextColor3 = C.WHITE,
+            BackgroundColor3 = C.BUTTON,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(0, y),
+            Size = UDim2.new(1, 0, 0, 36),
+            AutoButtonColor = false
+        }, Page)
+        Corner(b, 6)
+        Outline(b, Color3.fromRGB(40, 40, 45), 1)
 
-        local Status = AddInfo("Status: No test character selected", 82)
+        b.MouseEnter:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.12), {
+                BackgroundColor3 = Color3.fromRGB(27, 27, 32)
+            }):Play()
+        end)
 
-        MakeButton(PageContent, "SELECT TEST DUMMY", function()
-            if NameInput.Text:gsub("%s", "") == "" then
-                Status.Text = "Enter a test dummy name first"
-                return
-            end
-            Status.Text = "Demo selected: " .. NameInput.Text
-        end, 116)
+        b.MouseLeave:Connect(function()
+            TweenService:Create(b, TweenInfo.new(0.12), {
+                BackgroundColor3 = C.BUTTON
+            }):Play()
+        end)
 
-        MakeButton(PageContent, "DEMO GRAB", function()
-            Status.Text = "Demo grab activated"
-        end, 160)
-
-        MakeButton(PageContent, "DEMO RELEASE", function()
-            Status.Text = "Demo released"
-        end, 204)
-
-        MakeButton(PageContent, "DEMO KICK", function()
-            Status.Text = "Visual kick demonstration only"
-        end, 248)
-
-    elseif tab == "KICK" then
-        AddInfo("Visual-only kick interface demo", 0)
-        local Status = AddInfo("Status: IDLE", 40)
-
-        MakeButton(PageContent, "ENABLE DEMO", function()
-            Status.Text = "Status: ACTIVE (DEMO)"
-        end, 78)
-
-        MakeButton(PageContent, "STOP DEMO", function()
-            Status.Text = "Status: STOPPED"
-        end, 122)
-
-    elseif tab == "SETTINGS" then
-        AddInfo("ARKON HUB V4", 0)
-        AddInfo("Theme: Black / Blue outline", 35)
-        AddInfo("Mode: Visual Demo", 70)
-        MakeButton(PageContent, "RESET WINDOW POSITION", function()
-            Main.Position = UDim2.new(0.5, -260, 0.5, -215)
-        end, 110)
+        b.MouseButton1Click:Connect(callback)
+        return b
     end
+
+    local function Toggle(text, y)
+        local enabled = false
+        local b
+        b = Button(text .. "  [OFF]", y, function()
+            enabled = not enabled
+            b.Text = text .. (enabled and "  [ON]" or "  [OFF]")
+        end)
+    end
+
+    local function ClearPage()
+        for _, child in ipairs(Page:GetChildren()) do
+            child:Destroy()
+        end
+    end
+
+    local function ShowTab(tab)
+        ClearPage()
+        PageTitle.Text = tab
+
+        if tab == "FLING" then
+            Info("Visual demonstration settings", 0)
+            Toggle("Fling Demo", 36)
+            Toggle("Super Strength Demo", 78)
+            Toggle("Strength Indicator", 120)
+
+        elseif tab == "ANTI" then
+            Info("Local interface demonstration", 0)
+            Toggle("Anti Grab Demo", 36)
+            Toggle("Anti Ragdoll Demo", 78)
+            Toggle("Anti Snowball Demo", 120)
+            Toggle("Anti Explosion Demo", 162)
+            Toggle("Anti Kick Demo", 204)
+
+        elseif tab == "FUN" then
+            Info("Cosmetic demo options", 0)
+            Toggle("Wings", 36)
+            Toggle("Dynamic Wings", 78)
+            Toggle("Extra Wings", 120)
+            Toggle("Mech Suit", 162)
+
+        elseif tab == "BLOBMAN" then
+            Info("Test character name:", 0)
+
+            local NameInput = New("TextBox", {
+                PlaceholderText = "Enter test dummy name...",
+                Text = "",
+                TextSize = 13,
+                Font = Enum.Font.Gotham,
+                TextColor3 = C.WHITE,
+                PlaceholderColor3 = C.GRAY,
+                BackgroundColor3 = C.BUTTON,
+                ClearTextOnFocus = false,
+                Position = UDim2.fromOffset(0, 32),
+                Size = UDim2.new(1, 0, 0, 37)
+            }, Page)
+            Corner(NameInput, 6)
+            Outline(NameInput, C.BLUE, 1)
+
+            local Status = Info("Status: No test character selected", 76)
+
+            Button("SELECT TEST DUMMY", 108, function()
+                if NameInput.Text:gsub("%s", "") == "" then
+                    Status.Text = "Enter a test dummy name first"
+                else
+                    Status.Text = "Demo selected: " .. NameInput.Text
+                end
+            end)
+
+            Button("DEMO GRAB", 150, function()
+                Status.Text = "Demo grab activated"
+            end)
+
+            Button("DEMO RELEASE", 192, function()
+                Status.Text = "Demo released"
+            end)
+
+            Button("DEMO KICK", 234, function()
+                Status.Text = "Visual kick demo only"
+            end)
+
+        elseif tab == "KICK" then
+            Info("Visual-only kick interface demo", 0)
+            local Status = Info("Status: IDLE", 38)
+
+            Button("ENABLE DEMO", 76, function()
+                Status.Text = "Status: ACTIVE (DEMO)"
+            end)
+
+            Button("STOP DEMO", 118, function()
+                Status.Text = "Status: STOPPED"
+            end)
+
+        elseif tab == "SETTINGS" then
+            Info("ARKON HUB V5", 0)
+            Info("Theme: Black / Blue outline", 32)
+            Info("Mode: Visual Demo", 64)
+
+            Button("RESET WINDOW POSITION", 104, function()
+                Main.Position = UDim2.new(0.5, -260, 0.5, -215)
+            end)
+        end
+    end
+
+    local tabs = {"FLING", "ANTI", "FUN", "BLOBMAN", "KICK", "SETTINGS"}
+
+    for i, tab in ipairs(tabs) do
+        local b = New("TextButton", {
+            Text = tab,
+            TextSize = 12,
+            Font = Enum.Font.GothamBold,
+            TextColor3 = C.WHITE,
+            BackgroundColor3 = C.BUTTON,
+            BorderSizePixel = 0,
+            Position = UDim2.fromOffset(7, 9 + (i - 1) * 43),
+            Size = UDim2.new(1, -14, 0, 35)
+        }, Sidebar)
+        Corner(b, 5)
+        Outline(b, Color3.fromRGB(40, 40, 45), 1)
+
+        b.MouseButton1Click:Connect(function()
+            ShowTab(tab)
+        end)
+    end
+
+    ShowTab("FLING")
+
+    -- MINIMIZE THE WHOLE BODY, NOT JUST ITS BACKGROUND
+    local minimized = false
+    local fullSize = Main.Size
+
+    Minimize.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        Body.Visible = not minimized
+        Main.Size = minimized
+            and UDim2.fromOffset(520, 43)
+            or fullSize
+        Minimize.Text = minimized and "+" or "—"
+    end)
+
+    print("ARKON HUB V5 loaded!")
 end
 
-local tabs = {"FLING", "ANTI", "FUN", "BLOBMAN", "KICK", "SETTINGS"}
+CheckKey.MouseButton1Click:Connect(function()
+    if KeyInput.Text == DEMO_KEY then
+        KeyStatus.Text = "Key accepted! Opening hub..."
+        KeyStatus.TextColor3 = C.GREEN
 
-for i, tab in ipairs(tabs) do
-    local button = MakeButton(Sidebar, tab, function()
-        ShowTab(tab)
-    end, 10 + (i - 1) * 43)
+        task.wait(0.4)
+        OpenHub()
+    else
+        KeyStatus.Text = "Key is invalid!"
+        KeyStatus.TextColor3 = C.RED
+    end
+end)
 
-    button.Size = UDim2.new(1, -14, 0, 35)
-    button.Position = UDim2.fromOffset(7, 10 + (i - 1) * 43)
-end
-
-ShowTab("FLING")
-
-print("ARKON HUB V4 loaded successfully!")
+print("ARKON HUB V5 Key System loaded!")
